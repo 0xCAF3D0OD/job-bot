@@ -173,7 +173,7 @@ async def test_another_account_sees_nothing(client: AsyncClient, runtime: Runtim
     application_id = await add_application(
         runtime, "Secret SA", datetime.now(UTC) - timedelta(days=1)
     )
-    review = await add_review(client, application_id)
+    review = await add_review(client, application_id, held_at="2026-11-10")
     secured = Runtime.create(make_settings(auth_enabled=True))
     async with secured.sessionmaker.begin() as session:
         session.add(User(username=GUEST, password_hash=passwords.hash_password(PASSWORD)))
@@ -185,10 +185,15 @@ async def test_another_account_sees_nothing(client: AsyncClient, runtime: Runtim
             login = {"username": GUEST, "password": PASSWORD}
             assert (await api.post("/api/auth/login", json=login)).status_code == 204
             assert (await api.get(f"/api/interviews/{review}")).status_code == 404
+            # Le point rouvert depuis Rendez-vous (19.11) : ni lu ni modifié par un autre compte.
+            assert (await api.get(f"/api/interviews/{review}/debrief")).status_code == 404
+            put = await api.put(f"/api/interviews/{review}/debrief", json={"feeling": "bien"})
+            assert put.status_code == 404
             assert (await api.get("/api/interviews")).json() == {"items": [], "total": 0}
     finally:
         async with secured.engine.begin() as conn:
             await conn.execute(text("DELETE FROM users WHERE username = :u"), {"u": GUEST})
         await secured.dispose()
     assert (await client.get(f"/api/interviews/{review}")).status_code == 200
+    assert (await client.get(f"/api/interviews/{review}/debrief")).status_code == 200
     await reset()

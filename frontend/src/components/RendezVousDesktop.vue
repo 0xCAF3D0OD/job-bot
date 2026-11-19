@@ -8,7 +8,7 @@ import "./ListCard.vue";
 
 import type { Application } from "../api/client";
 import type { components } from "../api/schema";
-import { dateInSentence, inDays, timeOfDay } from "../dates";
+import { dateInSentence, inDays, meetingInLine, timeOfDay, todayDay } from "../dates";
 import { offerUndo } from "../composables/useUndo";
 import {
   checkedCount,
@@ -16,11 +16,15 @@ import {
   dateText,
   interviewFormat,
   interviewPlace,
+  interviewsToNote,
+  interviewTitle,
   lastAgreed,
   meetingsToNote,
+  notedInterviews,
   notedMeetings,
   notedSummary,
   pastTitle,
+  pointDone,
   sheetLines,
   timeAndPlace,
   upcomingAppointments,
@@ -31,6 +35,7 @@ import {
 import AppIcon from "./AppIcon.vue";
 import CalendarDate from "./CalendarDate.vue";
 import EmptyState from "./EmptyState.vue";
+import FairePointPanel from "./FairePointPanel.vue";
 import LinkedDetail from "./LinkedDetail.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 import OrpMeetingForm from "./OrpMeetingForm.vue";
@@ -56,6 +61,8 @@ const props = defineProps<{
   saveQuestions: (questions: Question[]) => Promise<boolean>;
   // Sous « Ton nom sur la feuille » : le nom et l'office enregistrés (vide : la ligne n'a que son titre).
   nameLine?: string;
+  // Recharge les candidatures après un point enregistré (l'entretien passe de « À noter » à « Passés »).
+  reloadApplications?: () => Promise<void>;
 }>();
 const emit = defineEmits<{
   toggle: [question: Question, checked: boolean];
@@ -76,6 +83,28 @@ const now = new Date();
 const upcoming = computed(() => upcomingAppointments(props.page.meeting ?? null, props.applications, now));
 const toNote = computed(() => meetingsToNote(props.page, now));
 const noted = computed(() => notedMeetings(props.page, now));
+// Faire le point sur ordinateur (planche FairePointOrdinateur, §72m ; accord de Kevin du 19.11.2026) : les entretiens
+// passés sans point vont dans « À noter » (tuile orange), puis dans « Passés » une fois le point fait (tuile grise,
+// « Point fait · Moyen »), mêlés aux rendez-vous ORP par date. Adresse : ?rdv=point-<candidature> ou retour-<retour>.
+const pointsToNote = computed(() => interviewsToNote(props.applications, now));
+const pointsNoted = computed(() => notedInterviews(props.applications, now));
+type ToNoteRow = { kind: "orp"; key: string; at: string; meeting: Meeting } | { kind: "point"; key: string; at: string; application: Application };
+type NotedRow =
+  | { kind: "orp"; key: string; at: string; meeting: Meeting }
+  | { kind: "retour"; key: string; at: string; application: Application; interview: NonNullable<Application["interviews"]>[number] };
+const byDateDesc = (a: { at: string }, b: { at: string }) => Date.parse(b.at) - Date.parse(a.at);
+const toNoteRows = computed<ToNoteRow[]>(() =>
+  [
+    ...toNote.value.map((m) => ({ kind: "orp" as const, key: pastKey(m), at: m.starts_at, meeting: m })),
+    ...pointsToNote.value.map((p) => ({ kind: "point" as const, key: p.key, at: p.at, application: p.application })),
+  ].sort(byDateDesc),
+);
+const notedRows = computed<NotedRow[]>(() =>
+  [
+    ...noted.value.map((m) => ({ kind: "orp" as const, key: pastKey(m), at: m.starts_at, meeting: m })),
+    ...pointsNoted.value.map((p) => ({ kind: "retour" as const, key: p.key, at: p.at, application: p.application, interview: p.interview })),
+  ].sort(byDateDesc),
+);
 const prep = computed(() => props.page.preparation);
 const lines = computed(() => sheetLines(prep.value));
 const checked = computed(() => prep.value.questions.filter((q) => q.checked).length);
@@ -86,8 +115,8 @@ function pastKey(m: Meeting): string {
 }
 const keys = computed(() => [
   ...upcoming.value.map((u) => (u.kind === "orp" ? "orp" : `entretien-${u.application.id}`)),
-  ...toNote.value.map(pastKey),
-  ...noted.value.map(pastKey),
+  ...toNoteRows.value.map((r) => r.key),
+  ...notedRows.value.map((r) => r.key),
 ]);
 // Le rendez-vous de l'adresse (?rdv=). Rien d'ouvert à l'arrivée (§36 du 16 novembre, décision de Kevin du 16.11) :
 // « Choisis un rendez-vous » à droite. PR 41 : un nouveau rendez-vous se saisit dans le panneau « Nouveau rendez-vous ».
@@ -106,9 +135,35 @@ const selectedInterview = computed(() => {
 });
 // Un rendez-vous passé, à noter ou noté : son détail est le formulaire de ce qui a été convenu (lot 14).
 const selectedPast = computed(() => [...toNote.value, ...noted.value].find((m) => pastKey(m) === selected.value) ?? null);
+// L'entretien passé choisi : son point à faire, ou un retour fait (rouvert prérempli).
+const selectedPoint = computed(() => {
+  const row = [...toNoteRows.value, ...notedRows.value].find((r) => r.key === selected.value);
+  if (!row || row.kind === "orp") return null;
+  const withTime = row.kind === "point" || row.at === row.application.interview_at;
+  return row.kind === "point"
+    ? { key: row.key, at: row.at, application: row.application, source: { kind: "application" as const, id: row.application.id }, done: false, withTime }
+    : { key: row.key, at: row.at, application: row.application, source: { kind: "interview" as const, id: row.interview.id }, done: true, withTime };
+});
+// Le point enregistré : les candidatures sont relues, et le retour de ce jour-là reste ouvert dans « Passés ».
+async function pointSaved(): Promise<void> {
+  const point = selectedPoint.value;
+  if (!point) return;
+  await props.reloadApplications?.();
+  // Les candidatures relues n'arrivent dans les props qu'au rendu suivant.
+  await nextTick();
+  if (point.done) return;
+  const day = todayDay(new Date(point.at));
+  const fresh = props.applications.find((a) => a.id === point.application.id);
+  const interview = fresh?.interviews?.find((i) => i.held_at === day);
+  if (interview) select(`retour-${interview.id}`);
+}
 // « Vendredi 30 octobre, 11 h · EPFL ».
 function pastLine(m: Meeting): string {
   return `${dateText(m.starts_at)}, ${timeAndPlace(m.starts_at, m.place)}`;
+}
+// « mercredi 12 nov., 14 h » (planche FairePointOrdinateur).
+function pointWhen(iso: string): string {
+  return meetingInLine(iso);
 }
 const lastNoted = computed(() => noted.value[0] ?? null);
 // La carte compacte épinglée (LinkedPin, §18 du 15 novembre ; Kevin, 15.11) : le titre de la carte choisie,
@@ -118,6 +173,7 @@ const pinned = computed(() => {
   const key = selected.value;
   const interview = selectedInterview.value;
   const past = selectedPast.value;
+  const point = selectedPoint.value;
   const found =
     key === "orp" && nextOrp.value
       ? { title: "Rendez-vous ORP", name: "ORP", at: nextOrp.value.at, tone: "orp" as const }
@@ -125,7 +181,9 @@ const pinned = computed(() => {
         ? { title: interview.application.job_title || "Poste non indiqué", name: interview.application.company || "Entreprise non indiquée", at: interview.at, tone: "blue" as const }
         : past
           ? { title: pastTitle(past.starts_at, now), name: "ORP", at: past.starts_at, tone: past.outcome_at ? ("past" as const) : ("orp" as const) }
-          : null;
+          : point
+            ? { title: interviewTitle(point.application), name: point.application.company || "Entreprise non indiquée", at: point.at, tone: point.done ? ("past" as const) : ("orp" as const) }
+            : null;
   if (!found) return null;
   return { ...found, label: `Revenir au rendez-vous du ${dateInSentence(found.at).slice(3)}, ${found.name}, dans la liste` };
 });
@@ -299,54 +357,64 @@ const list = ref<HTMLElement | null>(null);
             <LinkedArrow v-if="selected === (item.kind === 'orp' ? 'orp' : `entretien-${item.application.id}`)" />
           </button>
         </template>
-        <template v-if="toNote.length">
+        <template v-if="toNoteRows.length">
           <h2 class="rdv-list-title">
-            À noter<span>{{ toNote.length }}</span>
+            À noter<span>{{ toNoteRows.length }}</span>
           </h2>
           <button
-            v-for="item in toNote"
-            :key="item.id"
+            v-for="item in toNoteRows"
+            :key="item.key"
             type="button"
             class="rdv-item list-card"
-            :aria-current="selected === pastKey(item) ? 'true' : undefined"
-            :data-test="`rdv-to-note-${item.id}`"
-            @click="select(pastKey(item))"
+            :aria-current="selected === item.key ? 'true' : undefined"
+            :data-test="item.kind === 'orp' ? `rdv-to-note-${item.meeting.id}` : `rdv-to-note-point-${item.application.id}`"
+            @click="select(item.key)"
           >
             <CalendarDate
-              v-bind="cal(item.starts_at)"
+              v-bind="cal(item.at)"
               tone="orp"
               :size="44"
             />
-            <span class="rdv-item-text">
-              <span class="rdv-item-title">{{ pastTitle(item.starts_at, now) }}</span>
-              <span class="rdv-item-sub">{{ pastLine(item) }}</span>
+            <span
+              v-if="item.kind === 'orp'"
+              class="rdv-item-text"
+            >
+              <span class="rdv-item-title">{{ pastTitle(item.at, now) }}</span>
+              <span class="rdv-item-sub">{{ pastLine(item.meeting) }}</span>
             </span>
-            <LinkedArrow v-if="selected === pastKey(item)" />
+            <span
+              v-else
+              class="rdv-item-text"
+            >
+              <span class="rdv-item-title">{{ interviewTitle(item.application) }}</span>
+              <span class="rdv-item-sub">{{ [item.application.company, pointWhen(item.at)].filter(Boolean).join(" · ") }}</span>
+            </span>
+            <LinkedArrow v-if="selected === item.key" />
           </button>
         </template>
-        <template v-if="noted.length">
+        <template v-if="notedRows.length">
           <h2 class="rdv-list-title">
-            Passés<span>{{ noted.length }}</span>
+            Passés<span>{{ notedRows.length }}</span>
           </h2>
           <button
-            v-for="item in noted"
-            :key="item.id"
+            v-for="item in notedRows"
+            :key="item.key"
             type="button"
             class="rdv-item list-card"
-            :aria-current="selected === pastKey(item) ? 'true' : undefined"
-            :data-test="`rdv-item-passe-${item.id}`"
-            @click="select(pastKey(item))"
+            :aria-current="selected === item.key ? 'true' : undefined"
+            :data-test="item.kind === 'orp' ? `rdv-item-passe-${item.meeting.id}` : `rdv-item-retour-${item.interview.id}`"
+            @click="select(item.key)"
           >
             <CalendarDate
-              v-bind="cal(item.starts_at)"
+              v-bind="cal(item.at)"
               tone="past"
               :size="44"
             />
             <span class="rdv-item-text">
-              <span class="rdv-item-title">{{ pastTitle(item.starts_at, now) }}</span>
-              <span class="rdv-item-sub">{{ notedSummary(item) }}</span>
+              <span class="rdv-item-title">{{ item.kind === "orp" ? pastTitle(item.at, now) : interviewTitle(item.application) }}</span>
+              <span class="rdv-item-sub">{{ item.kind === "orp" ? notedSummary(item.meeting) : pointDone(item.interview) }}</span>
             </span>
-            <LinkedArrow v-if="selected === pastKey(item)" />
+            <LinkedArrow v-if="selected === item.key" />
           </button>
         </template>
       </div>
@@ -700,6 +768,16 @@ const list = ref<HTMLElement | null>(null);
           @add="emit('add', 'orp')"
         />
       </article>
+
+      <!-- Faire le point sur un entretien passé, ou rouvrir un retour fait (planche FairePointOrdinateur, §72m). -->
+      <FairePointPanel
+        v-else-if="selectedPoint"
+        :key="selectedPoint.key"
+        :source="selectedPoint.source"
+        :done="selectedPoint.done"
+        :with-time="selectedPoint.withTime"
+        @saved="pointSaved"
+      />
 
       <!-- Modifier le rendez-vous prévu. -->
       <OrpMeetingForm

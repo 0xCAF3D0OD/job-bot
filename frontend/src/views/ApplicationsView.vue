@@ -439,6 +439,10 @@ watch(
         void router.replace(debriefPage(application));
         return;
       }
+      if (wideQuery.value) {
+        void router.replace(pointInRendezVous(application, null));
+        return;
+      }
       if (!twoColumns.value) openId.value = null;
       openInterview(application, null);
     }
@@ -493,15 +497,25 @@ const interviewing = ref<{ application: Application; interview: Interview | null
 const preparing = ref<Application | null>(null);
 const interviewError = ref("");
 
-// « Faire le point » sur téléphone : une page entière (planche FairePoint, accord de Kevin du 18.11.2026). Sur ordinateur,
-// pas de planche : la fenêtre du retour complet reste. Rouvrir un retour fait (« Voir le retour ») garde la fenêtre.
+// « Faire le point » sur téléphone : une page entière (planche FairePoint, accord de Kevin du 18.11.2026). Rouvrir un
+// retour fait (« Voir le retour ») garde la fenêtre sur téléphone.
 function debriefPage(application: Application): string {
   return `/entretien/${application.id}/faire-le-point`;
+}
+
+// Sur ordinateur (planche FairePointOrdinateur, §72m ; accord de Kevin du 19.11.2026) : « Faire le point » et « Voir le
+// retour » ouvrent le panneau de droite de Rendez-vous. « Ajouter un autre entretien » garde la fenêtre complète.
+function pointInRendezVous(application: Application, interview: Interview | null): string {
+  return `/candidatures/rendez-vous-orp?rdv=${interview ? `retour-${interview.id}` : `point-${application.id}`}`;
 }
 
 function openInterview(application: Application, interview: Interview | null): void {
   if (phone.value && !interview && needsFeedback(application)) {
     void router.push(debriefPage(application));
+    return;
+  }
+  if (wideQuery.value && !phone.value && (interview?.held_at || (!interview && needsFeedback(application)))) {
+    void router.push(pointInRendezVous(application, interview));
     return;
   }
   interviewError.value = "";

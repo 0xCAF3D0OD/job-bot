@@ -10,8 +10,11 @@ import {
   countdown,
   dateText,
   interviewPlace,
+  interviewsToNote,
   meetingsToNote,
+  notedInterviews,
   notedMeetings,
+  pointDone,
   notedSummary,
   pastTitle,
   sheetLines,
@@ -178,5 +181,46 @@ describe("recherche de l'onglet Rendez-vous (maquette du 14 novembre, §6)", () 
     expect(appointmentMatches(interview, searchWords("exemple"))).toBe(true);
     expect(appointmentMatches(interview, searchWords("orp"))).toBe(false);
     expect(appointmentMatches(interview, [])).toBe(true);
+  });
+});
+
+describe("Faire le point sur ordinateur (planche FairePointOrdinateur, accord de Kevin du 19.11)", () => {
+  const withInterviews = (id: number, interview_at: string, interviews: object[], status = "entretien") =>
+    ({ ...application(id, interview_at, status), interviews }) as unknown as Application;
+
+  it("« À noter » : l'entretien passé sans retour ce jour-là, du plus récent au plus ancien", () => {
+    const items = interviewsToNote(
+      [
+        withInterviews(1, "2026-11-02T13:00:00Z", []),
+        withInterviews(2, "2026-11-05T13:00:00Z", []),
+        withInterviews(3, "2026-11-04T13:00:00Z", [{ id: 9, held_at: "2026-11-04" }]),
+        withInterviews(4, "2026-11-10T13:00:00Z", []),
+        withInterviews(5, "2026-11-03T13:00:00Z", [], "refus"),
+        // Comme le badge de l'onglet : pas le jour même, et 14 jours au plus.
+        withInterviews(6, "2026-11-06T07:00:00Z", []),
+        withInterviews(7, "2026-10-22T13:00:00Z", []),
+        withInterviews(8, "2026-10-23T13:00:00Z", []),
+      ],
+      NOW,
+    );
+    expect(items.map((i) => i.key)).toEqual(["point-2", "point-1", "point-8"]);
+  });
+
+  it("« Passés » : chaque retour fait, avec l'heure seulement pour l'entretien prévu", () => {
+    const items = notedInterviews(
+      [
+        withInterviews(1, "2026-11-04T13:00:00Z", [
+          { id: 7, held_at: "2026-10-20", feeling: null },
+          { id: 8, held_at: "2026-11-04", feeling: "moyen" },
+        ]),
+      ],
+      NOW,
+    );
+    expect(items.map((i) => [i.key, i.at])).toEqual([
+      ["retour-8", "2026-11-04T13:00:00Z"],
+      ["retour-7", "2026-10-20T00:00:00"],
+    ]);
+    expect(pointDone(items[0]!.interview)).toBe("Point fait · Moyen");
+    expect(pointDone(items[1]!.interview)).toBe("Point fait");
   });
 });

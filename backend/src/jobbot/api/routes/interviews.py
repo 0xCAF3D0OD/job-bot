@@ -210,13 +210,34 @@ async def _debrief(
     return application, day, interview
 
 
+async def _debrief_of_interview(
+    session: AsyncSession, interview_id: int
+) -> tuple[Application, date, Interview]:
+    """Un point déjà fait, rouvert depuis « Passés » de Rendez-vous sur ordinateur (« Voir le retour »,
+    accord de Kevin du 19.11.2026) : le retour de ce jour-là, même si un autre entretien a suivi."""
+    interview = await session.get(Interview, interview_id)
+    if interview is None or interview.held_at is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "retour introuvable")
+    application = await session.get(Application, interview.application_id)
+    if application is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "retour introuvable")
+    return application, interview.held_at, interview
+
+
+def _interview_at(application: Application, day: date) -> datetime:
+    """L'heure de l'entretien prévu si c'est ce jour-là ; sinon minuit du jour (l'heure n'est pas connue)."""
+    planned = application.interview_at
+    if planned is not None and planned.astimezone(LOCAL_TZ).date() == day:
+        return planned
+    return datetime.combine(day, datetime.min.time(), LOCAL_TZ)
+
+
 def _debrief_out(application: Application, day: date, interview: Interview | None) -> DebriefOut:
-    assert application.interview_at is not None
     return DebriefOut(
         application_id=application.id,
         company=application.company,
         job_title=application.job_title,
-        interview_at=application.interview_at,
+        interview_at=_interview_at(application, day),
         feeling=interview.feeling if interview else None,
         next_step=interview.next_step if interview else None,
         notes=interview.notes if interview else None,
@@ -239,12 +260,33 @@ async def save_debrief(request: Request, application_id: int, body: DebriefIn) -
         if interview is None:
             interview = Interview(application_id=application_id, held_at=day)
             session.add(interview)
-        interview.feeling = body.feeling
-        interview.next_step = body.next_step
-        interview.next_step_at = day + FOLLOW_UP_AFTER if body.next_step == "reponse" else None
-        interview.notes = body.notes
-        await session.flush()
-        return _debrief_out(application, day, interview)
+        return await _save_debrief(session, application, day, interview, body)
+
+
+async def _save_debrief(
+    session: AsyncSession, application: Application, day: date, interview: Interview, body: DebriefIn
+) -> DebriefOut:
+    interview.feeling = body.feeling
+    interview.next_step = body.next_step
+    interview.next_step_at = day + FOLLOW_UP_AFTER if body.next_step == "reponse" else None
+    interview.notes = body.notes
+    await session.flush()
+    return _debrief_out(application, day, interview)
+
+
+@router.get("/interviews/{interview_id}/debrief", operation_id="getInterviewDebrief")
+async def get_interview_debrief(request: Request, interview_id: int) -> DebriefOut:
+    async with _runtime(request).sessionmaker() as session:
+        return _debrief_out(*await _debrief_of_interview(session, interview_id))
+
+
+@router.put("/interviews/{interview_id}/debrief", operation_id="saveInterviewDebrief")
+async def save_interview_debrief(request: Request, interview_id: int, body: DebriefIn) -> DebriefOut:
+    """Met à jour le point d'un retour déjà fait : le ressenti, la suite et les notes ; ses autres
+    réponses (note sur 5, questions…) restent. Aucune IA, le statut ne change pas."""
+    async with _runtime(request).sessionmaker.begin() as session:
+        application, day, interview = await _debrief_of_interview(session, interview_id)
+        return await _save_debrief(session, application, day, interview, body)
 
 
 # --- Enseignements et conseils (docs/23 §3) ----------------------------------------------

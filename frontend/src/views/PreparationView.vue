@@ -13,6 +13,7 @@ import PrepCertificates from "../components/PrepCertificates.vue";
 import FormSheet from "../components/FormSheet.vue";
 import PageHero from "../components/PageHero.vue";
 import ActionBar from "../components/ActionBar.vue";
+import BottomBar from "../components/BottomBar.vue";
 import AiWritingLetter from "../components/AiWritingLetter.vue";
 import AppIcon from "../components/AppIcon.vue";
 import BottomSheet from "../components/BottomSheet.vue";
@@ -506,6 +507,8 @@ async function saveThenWrite(): Promise<void> {
 // La rédaction, puis la relecture : le bouton dit ce qui se passe vraiment (BusyButton).
 const phase = ref<"write" | "review">("write");
 const letterDone = ref(false);
+// L’écriture de la lettre sur téléphone, avant la première version : l’écran de la planche ChargementLettre.
+const phoneWriting = computed(() => phone.value && writing.value && !selected.value);
 async function reviewLetter(letter: Letter): Promise<Letter> {
   try {
     const { data } = await api.POST("/api/letters/{draft_id}/review", { params: { path: { draft_id: letter.id } } });
@@ -1243,10 +1246,11 @@ onMounted(() => void load());
             </p>
             <FormSheet :letter-text="currentLetterText" />
           </section>
-          <!-- La barre du bas (C6, C8) : d'abord le formulaire ; une fois ouvert, « J'ai postulé ». -->
-          <ActionBar
+          <!-- La barre du bas (C6, C8) : d'abord le formulaire ; une fois ouvert, « J'ai postulé ». Une ligne, la
+               secondaire à contour à gauche (Kevin, 19.11.2026). -->
+          <BottomBar
             v-if="phone"
-            class="prep-bar apply-actions"
+            class="apply-actions"
           >
             <ApplyActions
               :link="applyLink"
@@ -1256,7 +1260,7 @@ onMounted(() => void load());
               @open="opened = true"
               @mark="markApplied"
             />
-          </ActionBar>
+          </BottomBar>
         </div>
         <aside
           v-if="!phone"
@@ -1404,14 +1408,16 @@ onMounted(() => void load());
                ne rédige rien, le bouton du bas le propose), la lettre entière et modifiable (C4), « Modifier le
                texte » qui ouvre la consigne, puis « J’ai relu la lettre » (C11). -->
           <section
-            class="doc-card"
-            aria-labelledby="letter-card-title"
+            :class="['doc-card', { 'doc-card-writing': phoneWriting }]"
+            :aria-labelledby="phoneWriting ? undefined : 'letter-card-title'"
             data-test="letter-card"
           >
             <!-- Téléphone (§9) : « Moderne · Français » sous le titre et « Changer », qui ouvre la feuille ; plus de
-                 FR / DE / EN sur l’écran. Sur ordinateur, FR / DE / EN reste en haut du document. -->
+                 FR / DE / EN sur l’écran. Sur ordinateur, FR / DE / EN reste en haut du document. Pendant l’écriture
+                 (planche ChargementLettre, Kevin 19.11) : ni carte ni en-tête, le modèle se change une fois la lettre
+                 prête. -->
             <LayoutSheetLink
-              v-if="phone"
+              v-if="phone && !phoneWriting"
               v-model="shownLanguage"
               title="Lettre de motivation"
               title-id="letter-card-title"
@@ -1420,7 +1426,7 @@ onMounted(() => void load());
               language-label="Langue de la lettre"
             />
             <div
-              v-else
+              v-else-if="!phone"
               class="doc-card-head"
             >
               <h2 id="letter-card-title">
@@ -1568,7 +1574,9 @@ onMounted(() => void load());
             </div>
             <AiWritingLetter
               v-else-if="writing && !selected"
-              :with-cv="cvState === 'busy'"
+              :cv="cvState"
+              :cv-ready="!!currentCvId"
+              :phase="phase"
               :done="letterDone"
             />
 
@@ -2227,6 +2235,8 @@ onMounted(() => void load());
 .prep-desk .prep-side { gap: var(--space-4); }
 .prep-desk .offer-brief-group h3 { margin-top: var(--space-4); }
 .prep-desk .side-card > h2 { font-size: var(--font-title); font-weight: var(--weight-bold); }
+/* Planche ChargementLettre (Kevin, 19.11) : pendant l’écriture, plus de carte, tout sur le fond de la page. */
+.doc-card.doc-card-writing { padding: 0; background: none; border: 0; }
 .prep-desk .doc-card { position: relative; gap: 0; padding: 0; overflow: hidden; background: var(--surface-muted); }
 .prep-desk .doc-card-head h2 { font-size: var(--font-title); }
 .prep-desk .doc-card > :not(.doc-card-head, .doc-search, .doc-hit-box, .letter-sheet, .cv-sheet, .prep-writing, .prep-empty-page) { margin-left: var(--prep-24); margin-right: var(--prep-24); }
