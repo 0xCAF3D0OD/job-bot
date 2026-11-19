@@ -57,6 +57,8 @@
   animation: motion-in var(--motion-enter) backwards;
   animation-delay: calc(min(var(--motion-i, 0), 4) * var(--motion-stagger));
 }
+/* Une étape dont les enfants entrent en cascade : le bloc lui-même n'ajoute pas son propre glissement. */
+.motion-step-enter-active.motion-cascade { animation: none; }
 .motion-cascade > :nth-child(2) { --motion-i: 1; }
 .motion-cascade > :nth-child(3) { --motion-i: 2; }
 .motion-cascade > :nth-child(4) { --motion-i: 3; }
