@@ -41,7 +41,6 @@ onBeforeUnmount(() => {
   padding: var(--space-3) var(--space-4) calc(var(--space-3) + env(safe-area-inset-bottom));
   background: var(--bg); border-top: 1px solid var(--line);
 }
-:root:has(.tab-bar) .bottom-bar { bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom)); padding-bottom: var(--space-3); }
 html:root:has(.bottom-bar) main { padding-bottom: calc(var(--bottom-bar-h, var(--space-12)) + var(--space-6)); }
 .bottom-bar > .bottom-bar-note { flex: 1 0 100%; margin: 0; }
 .bottom-bar > :is(.bottom-bar-primary, .bottom-bar-secondary) {
