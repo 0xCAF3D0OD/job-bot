@@ -806,3 +806,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.592 | Trier sur ordinateur : « Voir l'annonce complète » centré au dos d'une carte, comme sur la planche | livrée |
 | 1.6.593 | Mouvement des éléments : variables partagées --motion-enter, --motion-exit et --motion-stagger, utilitaires d'entrée et de sortie, mouvement réduit en fondu de 150 ms | livrée (variables et utilitaires) ; appliquée zone par zone dans les PR suivantes, en commençant par les premiers pas |
 | 1.6.594 | Téléphone, écriture de la lettre conforme à ChargementLettre : sans carte ni en-tête, logo, étapes vraies (« CV adapté » coché seulement CV prêt) | livrée |
+| 1.6.595 | La CI installe le navigateur puis ses dépendances avec plusieurs essais, et continue si le miroir apt de GitHub ne répond pas | livrée |
