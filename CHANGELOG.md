@@ -802,3 +802,17 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.588 | Retour d'entretien sur ordinateur : plus de barre de défilement horizontale dans la fenêtre (infobulles des boutons ronds alignées sur leur bord droit) | livrée |
 | 1.6.589 | Trier sur ordinateur : la citation au dos d'une carte s'arrête sur une ligne entière avec « … », plus de ligne tranchée ni de surlignage hors du bloc | livrée |
 | 1.6.590 | Faire le point sur téléphone : le ressenti et les notes posés sur le fond, sans carte (§72n) | livrée |
+| 1.6.591 | Coordonnées : la liste « Pour les formulaires » dans sa propre carte, lignes sans marge négative, flèche à 16 px du bord (§72o) | livrée |
+| 1.6.592 | Trier sur ordinateur : « Voir l'annonce complète » centré au dos d'une carte, comme sur la planche | livrée |
+| 1.6.593 | Mouvement des éléments : variables partagées --motion-enter, --motion-exit et --motion-stagger, utilitaires d'entrée et de sortie, mouvement réduit en fondu de 150 ms | livrée (variables et utilitaires) ; appliquée zone par zone dans les PR suivantes, en commençant par les premiers pas |
+| 1.6.594 | Téléphone, écriture de la lettre conforme à ChargementLettre : sans carte ni en-tête, logo, étapes vraies (« CV adapté » coché seulement CV prêt) | livrée |
+| 1.6.595 | La CI installe le navigateur puis ses dépendances avec plusieurs essais, et continue si le miroir apt de GitHub ne répond pas | livrée |
+| 1.6.596 | Faire le point sur ordinateur : le panneau de droite de Rendez-vous (À noter, puis Passés), aussi pour « Voir le retour » (§72m) ; « À noter » compte les mêmes entretiens que le badge de l'onglet | livrée |
+| 1.6.597 | Fiche d'une offre sur téléphone : le menu ⋯ dans l'ordre et avec les icônes de la planche ActionsOffre (assistant, agence avec l'immeuble, expirée, note, ouvrir l'annonce, partager ; « Remettre dans Nouvelles » avec la flèche retour) | livrée |
+| 1.6.598 | Compte : lignes des listes en carte en padding 12px 4px dans une carte à 12 px de marge, flèche › à 16 px du bord | livrée |
+| 1.6.599 | Téléphone : une barre du bas commune (BottomBar, une ligne, secondaire à contour à gauche, principale pleine à droite), d'abord sur Ma candidature › Postuler | livrée |
+| 1.6.600 | Offres : « Écarter » retire tout de suite l'offre de la liste (Nouvelles, Gardées, En préparation, Toutes) ; « Annuler » la remet à sa place exacte (K5 amendée le 19.11) | livrée pour une offre ; « Écarter N offres » suit dans la PR de la sélection multiple |
+| 1.6.601 | CV adapté sur ordinateur : « Pourquoi » sous chaque changement quand le serveur la donne, « Annuler » aussi sur Profil, titre « Expérience chez … », libellés et marges de la planche du 18.11 | livrée |
+| 1.6.602 | Offres : « Autres offres » (Loin de ton profil, Expirées, Postuler spontanément) en lignes padding 12px 4px dans une carte à 12 px de marge, flèche › à 16 px du bord | livrée |
+| 1.6.603 | Fiche d'une offre, ordinateur : la carte « Offre expirée » retrouve ses marges intérieures, le texte ne touche plus le bord | livrée |
+| 1.6.604 | Réglages (téléphone) : listes en carte en lignes à 4 px des côtés dans une carte à 12 px de marge, flèche › à 16 px du bord | livrée |

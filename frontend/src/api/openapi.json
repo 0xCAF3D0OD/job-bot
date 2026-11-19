@@ -10374,6 +10374,99 @@
         }
       }
     },
+    "/api/interviews/{interview_id}/debrief": {
+      "get": {
+        "tags": [
+          "interviews"
+        ],
+        "summary": "Get Interview Debrief",
+        "operationId": "getInterviewDebrief",
+        "parameters": [
+          {
+            "name": "interview_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Interview Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DebriefOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "interviews"
+        ],
+        "summary": "Save Interview Debrief",
+        "description": "Met à jour le point d'un retour déjà fait : le ressenti, la suite et les notes ; ses autres\nréponses (note sur 5, questions…) restent. Aucune IA, le statut ne change pas.",
+        "operationId": "saveInterviewDebrief",
+        "parameters": [
+          {
+            "name": "interview_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Interview Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DebriefIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DebriefOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/interviews/insights": {
       "get": {
         "tags": [
@@ -15657,6 +15750,11 @@
             "type": "array",
             "title": "Origin Ids",
             "default": []
+          },
+          "origin_summary": {
+            "type": "string",
+            "title": "Origin Summary",
+            "default": ""
           },
           "reasons": {
             "items": {

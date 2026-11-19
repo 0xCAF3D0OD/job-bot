@@ -3829,6 +3829,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/interviews/{interview_id}/debrief": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Interview Debrief */
+        get: operations["getInterviewDebrief"];
+        /**
+         * Save Interview Debrief
+         * @description Met à jour le point d'un retour déjà fait : le ressenti, la suite et les notes ; ses autres
+         *     réponses (note sur 5, questions…) restent. Aucune IA, le statut ne change pas.
+         */
+        put: operations["saveInterviewDebrief"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/interviews/insights": {
         parameters: {
             query?: never;
@@ -5510,6 +5532,11 @@ export interface components {
              * @default []
              */
             origin_ids: number[];
+            /**
+             * Origin Summary
+             * @default
+             */
+            origin_summary: string;
             /**
              * Reasons
              * @default []
@@ -17770,6 +17797,72 @@ export interface operations {
             header?: never;
             path: {
                 application_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DebriefIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebriefOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getInterviewDebrief: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                interview_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebriefOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    saveInterviewDebrief: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                interview_id: number;
             };
             cookie?: never;
         };
