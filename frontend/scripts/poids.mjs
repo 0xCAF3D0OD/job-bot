@@ -42,6 +42,7 @@ export const LIMITS = {
   "js-candidatures-menu": 175_500, // la feuille « ⋯ » de la fiche (téléphone), chargée à la demande : la limite de Candidatures
   "js-candidatures-compatibilite": 175_500, // la feuille de la compatibilité, chargée à la demande : la limite de Candidatures
   "js-candidatures-ajout": 175_500, // les formulaires du panneau « Ajouter », chargés à part : la limite de Candidatures
+  "js-candidatures-selection": 175_500, // la sélection multiple (§72q), chargée au premier « Sélectionner » : la limite de Candidatures
   "js-preparer": 157_400,
   "js-preparer-panneaux": 157_400,
   "js-suivi": 176_800,
@@ -89,6 +90,7 @@ export const LIMITS = {
   "css-candidatures-menu": 72_500, // la feuille « ⋯ » de la fiche (téléphone), chargée à la demande : la limite de Candidatures
   "css-candidatures-compatibilite": 72_500, // la feuille de la compatibilité, chargée à la demande : la limite de Candidatures
   "css-candidatures-ajout": 72_500, // les formulaires du panneau « Ajouter », chargés à part : la limite de Candidatures
+  "css-candidatures-selection": 72_500, // la sélection multiple (§72q), chargée au premier « Sélectionner » : la limite de Candidatures
   "css-preparer": 70_500,
   "css-preparer-panneaux": 70_500,
   "css-suivi": 73_600,
@@ -156,6 +158,9 @@ export const PAGES = {
   // Les formulaires du panneau « Ajouter » (une offre, une candidature spontanée), chargés à part et préchargés dès
   // l'affichage de la page (même règle que la compatibilité), mesurés avec la page sous les limites de Candidatures.
   "candidatures-ajout": ["views/JobsView.vue", "views/OffersView.vue", "components/addForms.ts"],
+  // La sélection multiple (§72q, 19.11) : son en-tête et sa barre, chargés au premier « Sélectionner », avec les
+  // formulaires d'« Ajouter » déjà préchargés : le pire cas, sous les limites de Candidatures.
+  "candidatures-selection": ["views/JobsView.vue", "views/OffersView.vue", "components/addForms.ts", "components/offerSelect.ts"],
   // Préparer avec les contacts de l'entreprise (étape Postuler, ordinateur), chargés à part depuis le 19.11.
   preparer: ["views/PreparationView.vue", "components/ContactsPanel.vue"],
   // Préparer avec l'étape CV et tous ses panneaux chargés à la demande ouverts (allègement (c), issue #797) : le pire cas garde les

@@ -57,6 +57,8 @@
   --paper-shadow: 0 2px 8px rgb(27 31 42 / 12%);
   /* Carte sélectionnée (§12 du 9 novembre) : #F5F7FE en clair, #232B45 en sombre. */
   --selected-bg: #F5F7FE;
+  /* Carte cochée de la sélection multiple (§72q, Kevin le 19.11). */
+  --check-bg: #F3F5FD;
   /* Liste reliée à un détail (Candidatures ordinateur, §11 du 15 novembre) : le trait de la zone de détail et de son
      encoche, et le fond de la carte choisie. Ailleurs, la sélection garde --selected-bg. */
   --linked-line: #D5D1C7;
@@ -269,6 +271,7 @@
     --row-icon: #C7BFB3;
     --paper-shadow: 0 2px 12px rgb(0 0 0 / 50%);
     --selected-bg: #232B45;
+    --check-bg: #232B45;
     --linked-line: #4E473E;
     --unrated-dash: #ABA398;
     --unset-text: #9C9488;
@@ -343,6 +346,7 @@
   --row-icon: #C7BFB3;
   --paper-shadow: 0 2px 12px rgb(0 0 0 / 50%);
   --selected-bg: #232B45;
+  --check-bg: #232B45;
   --linked-line: #4E473E;
   --unrated-dash: #ABA398;
   --unset-text: #9C9488;

@@ -83,3 +83,30 @@ async def test_criteria_stamp_and_clear_the_date(
         stored = await session.get(Offer, offer)
         assert stored is not None and stored.status == OfferStatus.TO_REVIEW
     assert await set_aside_at(ai, offer) is None
+
+
+async def test_discard_many_in_one_call(
+    api: AsyncClient,
+    ai: Runtime,  # noqa: F811
+) -> None:
+    """Sélection multiple (§72q, Kevin le 19.11) : un appel, la même date qu'une offre seule ; une
+    offre déjà écartée garde sa date, une offre inconnue est laissée de côté."""
+    first, second, already = [await add_offer(ai, n) for n in (1, 2, 3)]
+    applied = await add_offer(ai, 4, status=OfferStatus.APPLIED)
+    await api.patch(f"/api/offers/{already}/status", json={"status": "ignored"})
+    old = datetime(2026, 11, 12, 9, 0, tzinfo=UTC)
+    async with ai.sessionmaker.begin() as session:
+        await session.execute(update(Offer).where(Offer.id == already).values(set_aside_at=old))
+    response = await api.post(
+        "/api/offers/discard", json={"ids": [first, second, already, applied, 999999, first]}
+    )
+    assert response.status_code == 200
+    assert response.json() == {
+        "ignored": [first, second, already],
+        "skipped": [applied, 999999],
+    }
+    for offer in (first, second):
+        assert recent(await set_aside_at(ai, offer))
+        assert (await api.get(f"/api/offers/{offer}")).json()["status"] == "ignored"
+    assert await set_aside_at(ai, already) == old
+    assert (await api.post("/api/offers/discard", json={"ids": []})).status_code == 422

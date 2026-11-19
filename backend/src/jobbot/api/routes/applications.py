@@ -94,6 +94,43 @@ async def set_offer_status(request: Request, offer_id: int, body: OfferStatusIn)
     return OfferStatusOut(id=offer_id, status=OfferStatus(body.status))
 
 
+class OffersDiscardIn(BaseModel):
+    # Sélection multiple (§72q, Kevin le 19.11) : les offres cochées, écartées en un appel.
+    ids: Annotated[list[int], Field(min_length=1, max_length=500)]
+
+
+class OffersDiscardOut(BaseModel):
+    ignored: list[int]
+    # Introuvables (ou d'un autre compte), ou qui ont une candidature : laissées telles quelles.
+    skipped: list[int]
+
+
+@router.post("/offers/discard", operation_id="discardOffers")
+async def discard_offers(request: Request, body: OffersDiscardIn) -> OffersDiscardOut:
+    """« Écarter N offres » (§72q) : chaque offre passe par la même écriture que l'écart d'une offre
+    seule, donc la même date de mise à l'écart (`_stamp_set_aside`) ; une offre déjà écartée garde
+    sa date. Rien n'est écrit pour une offre qui a une candidature."""
+    wanted = list(dict.fromkeys(body.ids))
+    async with _runtime(request).sessionmaker.begin() as session:
+        offers = (await session.scalars(select(Offer).where(Offer.id.in_(wanted)))).all()
+        applied = set(
+            await session.scalars(
+                select(Application.offer_id).where(Application.offer_id.in_(wanted))
+            )
+        )
+        ignored: list[int] = []
+        for offer in offers:
+            if offer.id in applied or offer.status == OfferStatus.APPLIED:
+                continue
+            offer.status = OfferStatus.IGNORED
+            ignored.append(offer.id)
+    done = set(ignored)
+    log.info("offers_discarded", count=len(ignored), skipped=len(wanted) - len(ignored))
+    return OffersDiscardOut(
+        ignored=[i for i in wanted if i in done], skipped=[i for i in wanted if i not in done]
+    )
+
+
 class OfferExpiryIn(BaseModel):
     expired: bool
 

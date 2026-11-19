@@ -6,8 +6,6 @@ import { api, type GoogleJobs, type Offer, type OfferFacets, type OrpMonth } fro
 import AppIcon from "../components/AppIcon.vue";
 import BusyButton from "../components/BusyButton.vue";
 import ApplicationForm, { type ApplicationFormValue } from "../components/ApplicationForm.vue";
-import ApplicationSent from "../components/ApplicationSent.vue";
-import GoalReached from "../components/GoalReached.vue";
 import { firstGoal } from "../composables/useGoalMoment";
 import OfferCard from "../components/OfferCard.vue";
 import OfferDetail from "../components/OfferDetail.vue";
@@ -41,6 +39,8 @@ import { usePageReady } from "../composables/usePageTransition";
 import { useProfileEmpty } from "../composables/useProfileEmpty";
 import PlanLimit from "../components/PlanLimit.vue";
 import CountBadge from "../components/CountBadge.vue";
+import { useOfferSelection } from "../composables/useOfferSelection";
+import { useFocusMode } from "../composables/useFocusMode";
 
 // Les formulaires du panneau « Ajouter » (une offre, une candidature spontanée) se chargent à part de Candidatures,
 // comme la feuille de la compatibilité (décision de Kevin du 18.11, 13 h 37) : la page s'ouvre plus légère. Ils sont
@@ -48,6 +48,15 @@ import CountBadge from "../components/CountBadge.vue";
 const loadAddForms = () => import("../components/addForms");
 const ManualOfferForm = defineAsyncComponent(() => loadAddForms().then((m) => m.ManualOfferForm));
 const SpontaneousForm = defineAsyncComponent(() => loadAddForms().then((m) => m.SpontaneousForm));
+// L'écran qui suit « Marquer comme envoyée » et l'objectif atteint : chargés à part, comme dans Préparer (poids de
+// Candidatures, compensation de la sélection multiple du 19.11), préchargés dès l'affichage de la page.
+const loadSent = () => Promise.all([import("../components/ApplicationSent.vue"), import("../components/GoalReached.vue")]);
+const ApplicationSent = defineAsyncComponent(() => loadSent().then(([m]) => m.default));
+const GoalReached = defineAsyncComponent(() => loadSent().then(([, m]) => m.default));
+// L'en-tête et la barre de la sélection multiple (§72q) : chargés à part, au premier « Sélectionner ».
+const loadSelect = () => import("../components/offerSelect");
+const OfferSelectHead = defineAsyncComponent(() => loadSelect().then((m) => m.OfferSelectHead));
+const OfferSelectBar = defineAsyncComponent(() => loadSelect().then((m) => m.OfferSelectBar));
 
 const PAGE_SIZE = 50;
 // Sur téléphone, « Afficher n offres de plus » charge 20 offres par appui (prompt du 10 novembre, fin de soirée, PR 35 ;
@@ -363,6 +372,72 @@ function selectOffer(id: number): void {
   void nextTick(() => document.querySelector<HTMLElement>("[data-test=offer-detail-title]")?.focus({ preventScroll: true }));
 }
 
+// Sélection multiple (§72q, Kevin le 19.11) : « Sélectionner » à droite du premier titre de section ; chaque carte devient
+// une case à cocher ; « Toutes les expirées · N » coche d'un coup les offres expirées ou retirées ; « Écarter N offres »
+// retire les cartes tout de suite et les écarte en un seul appel à la fin du bandeau « N offres écartées · Annuler »
+// (durée commune des bandeaux) ; « Annuler » les remet à leur place. Échap, la croix ou « Annuler » quittent sans rien écarter. Sur téléphone,
+// l'en-tête et la barre du bas laissent la place à ceux de la sélection (mode concentration).
+const selection = useOfferSelection();
+const { focus } = useFocusMode();
+const selectable = (o: Offer) => o.status !== "applied" && o.status !== "ignored";
+const isExpired = (o: Offer) => !!o.expired_at && o.status !== "applied";
+const expiredIds = computed(() => shown.value.filter((o) => selectable(o) && isExpired(o)).map((o) => o.id));
+const allExpired = computed(() => expiredIds.value.length > 0 && expiredIds.value.every((id) => selection.checked.value.has(id)));
+// Le lien n'apparaît qu'à côté du premier titre de section (planches Candidatures et CandidaturesOrdinateurAucuneOuverte).
+const firstDayKey = computed(() => rows.value.find((row) => row.day)?.key ?? null);
+const canSelect = computed(() => !selection.selecting.value && shown.value.some(selectable));
+
+// Toute la liste est chargée avant de cocher : le nombre de « Toutes les expirées » dit vrai, pas seulement la page vue.
+async function startSelection(): Promise<void> {
+  selectedId.value = null;
+  if (filtersOpen.value) closeFilters();
+  selection.start();
+  if (phone.value) focus.value = true;
+  let guard = 20;
+  while (selection.selecting.value && items.value.length < total.value && !failed.value && guard-- > 0) await load(true, 200);
+}
+
+function stopSelection(): void {
+  selection.stop();
+  focus.value = false;
+}
+
+function toggleExpired(): void {
+  selection.setMany(expiredIds.value, !allExpired.value);
+}
+
+function discardSelected(): void {
+  const ids = shown.value.filter((o) => selection.checked.value.has(o.id) && selectable(o)).map((o) => o.id);
+  if (!ids.length) return;
+  const taken = ids
+    .map((id) => ({ offer: items.value.find((o) => o.id === id)!, index: items.value.findIndex((o) => o.id === id) }))
+    .sort((a, b) => a.index - b.index);
+  const gone = new Set(ids);
+  items.value = items.value.filter((o) => !gone.has(o.id));
+  total.value = Math.max(0, total.value - ids.length);
+  stopSelection();
+  void offerUndo({
+    message: ids.length > 1 ? `${ids.length} offres écartées` : "1 offre écartée",
+    commit: async (keepalive) => {
+      const { error } = await api.POST("/api/offers/discard", { body: { ids }, keepalive });
+      if (error) {
+        notice.value = "Les offres n’ont pas pu être écartées.";
+        return false;
+      }
+      await load();
+      return true;
+    },
+    // Rien n'est parti au serveur : les cartes reviennent à leur place exacte.
+    restore: () => {
+      for (const { offer, index } of taken) items.value = withOffer(offer, index);
+      total.value += ids.length;
+    },
+  });
+}
+
+// Quitter Offres (autre onglet, autre page) éteint la sélection et rend la barre du bas.
+onUnmounted(stopSelection);
+
 // Android partage souvent le lien dans le texte (« Titre https://… ») : on l'en sort.
 // L'adresse est nettoyée avant d'ouvrir : le panneau ajoute une entrée d'historique pour le bouton retour, et la
 // retire en se fermant. Ouvert avant le nettoyage, ce retour ramenait sur « ?ajouter=1 » et le panneau se rouvrait
@@ -493,7 +568,7 @@ async function showMoreOffers(): Promise<void> {
   document.querySelector<HTMLElement>(`[data-offer-row="${first.id}"] .list-card`)?.focus();
 }
 
-async function load(append = false): Promise<void> {
+async function load(append = false, size?: number): Promise<void> {
   const current = ++requestId;
   loading.value = true;
   failed.value = false;
@@ -502,7 +577,7 @@ async function load(append = false): Promise<void> {
     const { data } = await api.GET("/api/offers", {
       params: {
         query: {
-          limit: append && phone.value ? MORE_SIZE : PAGE_SIZE,
+          limit: size ?? (append && phone.value ? MORE_SIZE : PAGE_SIZE),
           offset: append ? items.value.length : 0,
           sort: f.sort,
           view: f.view,
@@ -682,7 +757,8 @@ function onKeydown(event: KeyboardEvent): void {
   if (event.defaultPrevented || document.documentElement.classList.contains("side-open")) return;
   // Une feuille du bas ouverte (<dialog>) se ferme seule : la fiche dessous reste ouverte.
   if (document.querySelector("dialog[open]")) return;
-  if (applying.value) applying.value = null;
+  if (selection.selecting.value) stopSelection();
+  else if (applying.value) applying.value = null;
   else if (filtersOpen.value) closeFilters();
   else selectedId.value = null;
 }
@@ -718,6 +794,7 @@ onMounted(() => {
   void openShared();
   void loadChunkTitles();
   void loadAddForms();
+  void loadSent();
 });
 useDataChanged(() => {
   void load();
@@ -765,7 +842,18 @@ onUnmounted(() => {
       v-if="!bare"
       v-bind="phone || wide ? { to: phone ? '#jobs-tools' : '#offers-list-tools', defer: true } : { class: 'in-place' }"
     >
+      <OfferSelectHead
+        v-if="selection.selecting.value"
+        :count="selection.count.value"
+        :expired="expiredIds.length"
+        :all-expired="allExpired"
+        :actions="!phone"
+        @quit="stopSelection"
+        @expired="toggleExpired"
+        @discard="discardSelected"
+      />
       <div
+        v-else
         class="offers-toolbar"
         data-test="offers-toolbar"
       >
@@ -845,7 +933,7 @@ onUnmounted(() => {
       </div>
     </component>
     <OfferFilterChips
-      v-if="!phoneEmptyFiltered"
+      v-if="!phoneEmptyFiltered && !selection.selecting.value"
       :chips="chips"
       @update="(patch) => update(patch, true)"
       @reset="reset(true)"
@@ -1151,6 +1239,15 @@ onUnmounted(() => {
                 <span class="offer-day-name">{{ row.day.name }}</span>
                 <!-- Ordinateur (CandidaturesOrdinateurB du 13.11) : le nombre seul ; « offres » reste pour le lecteur d’écran. -->
                 <span class="offer-day-count">{{ row.day.n }}<span class="offer-day-unit">{{ row.day.count.slice(String(row.day.n).length) }}</span></span>
+                <button
+                  v-if="row.key === firstDayKey && canSelect"
+                  type="button"
+                  class="offers-select-link"
+                  data-test="select-start"
+                  @click="startSelection"
+                >
+                  Sélectionner
+                </button>
               </h2>
               <OfferCard
                 v-else-if="row.offer"
@@ -1158,7 +1255,8 @@ onUnmounted(() => {
                 :selected="row.offer.id === selectedId"
                 :show-date="!byDay || row.offer.id === pinnedId"
                 :outside="row.offer.id === outsideId"
-                @select="selectOffer(row.offer.id)"
+                :checked="selection.selecting.value && selectable(row.offer) ? selection.checked.value.has(row.offer.id) : null"
+                @select="selection.selecting.value ? selectable(row.offer) && selection.toggle(row.offer.id) : selectOffer(row.offer.id)"
               />
             </li>
           </TransitionGroup>
@@ -1420,6 +1518,12 @@ onUnmounted(() => {
       </BusyButton>
     </template>
   </BottomSheet>
+  <OfferSelectBar
+    v-if="phone && selection.selecting.value"
+    :count="selection.count.value"
+    @quit="stopSelection"
+    @discard="discardSelected"
+  />
 </template>
 
 <style>
@@ -1447,6 +1551,15 @@ onUnmounted(() => {
   border-radius: 50%; background: none; color: inherit; cursor: pointer;
 }
 .offers-chip-remove:hover { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+/* « Sélectionner » (§72q, planches Candidatures et CandidaturesOrdinateurAucuneOuverte du 19.11) : à droite du premier
+   titre de section, 14 px gras bleu, zone de 44 px centrée sur le titre ; ses marges de -22 px ne grandissent pas la ligne. */
+.offers-select-link {
+  --sl-out: calc(var(--target-min) / -2); align-self: center; display: inline-flex; align-items: center; min-height: var(--target-min);
+  margin: var(--sl-out) 0 var(--sl-out) auto; padding: 0; border: 0; background: none; color: var(--primary-text);
+  font-size: var(--font-small); font-weight: var(--weight-bold);
+}
+/* Téléphone : la barre de la sélection est fixe en bas ; la liste garde sa hauteur dessous pour la dernière carte. */
+.offers-page:has(~ .multi-bar) .offer-cards { --multi-room: 96px; padding-bottom: var(--multi-room); }
 </style>
 
 <style scoped>

@@ -2067,6 +2067,28 @@ export interface paths {
         patch: operations["setOfferStatus"];
         trace?: never;
     };
+    "/api/offers/discard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Discard Offers
+         * @description « Écarter N offres » (§72q) : chaque offre passe par la même écriture que l'écart d'une offre
+         *     seule, donc la même date de mise à l'écart (`_stamp_set_aside`) ; une offre déjà écartée garde
+         *     sa date. Rien n'est écrit pour une offre qui a une candidature.
+         */
+        post: operations["discardOffers"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/offers/{offer_id}/expiry": {
         parameters: {
             query?: never;
@@ -7874,6 +7896,18 @@ export interface components {
              * @default false
              */
             retry: boolean;
+        };
+        /** OffersDiscardIn */
+        OffersDiscardIn: {
+            /** Ids */
+            ids: number[];
+        };
+        /** OffersDiscardOut */
+        OffersDiscardOut: {
+            /** Ignored */
+            ignored: number[];
+            /** Skipped */
+            skipped: number[];
         };
         /**
          * OrpHolder
@@ -14147,6 +14181,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OfferStatusOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    discardOffers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OffersDiscardIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OffersDiscardOut"];
                 };
             };
             /** @description Validation Error */

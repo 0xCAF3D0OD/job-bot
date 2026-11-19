@@ -20,8 +20,11 @@ const props = withDefaults(
     logo?: string | null;
     to: RouteLocationRaw;
     selected?: boolean;
+    // Sélection multiple (§72q, Kevin le 19.11) : la carte devient une case à cocher (role="checkbox"), la case de
+    // 24 px (zone de 44) à la place du logo ; null hors du mode sélection.
+    checked?: boolean | null;
   }>(),
-  { company: null, location: null, logo: null, selected: false },
+  { company: null, location: null, logo: null, selected: false, checked: null },
 );
 const emit = defineEmits<{ select: [] }>();
 
@@ -38,22 +41,55 @@ watch(
 );
 const showLogo = computed(() => !!props.logo && !logoFailed.value);
 
+const checking = computed(() => props.checked !== null);
+
 function onClick(event: MouseEvent): void {
+  if (checking.value) {
+    emit("select");
+    return;
+  }
   if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+  event.preventDefault();
+  emit("select");
+}
+
+function onKey(event: KeyboardEvent): void {
+  if (!checking.value || (event.key !== " " && event.key !== "Enter")) return;
   event.preventDefault();
   emit("select");
 }
 </script>
 
 <template>
-  <a
-    :href="href"
-    class="list-card"
-    :aria-current="selected ? 'true' : undefined"
+  <component
+    :is="checking ? 'div' : 'a'"
+    :href="checking ? undefined : href"
+    :class="['list-card', { 'list-card-check': checking }]"
+    :role="checking ? 'checkbox' : undefined"
+    :aria-checked="checking ? String(checked) : undefined"
+    :tabindex="checking ? 0 : undefined"
+    :aria-current="selected && !checking ? 'true' : undefined"
     data-test="list-card"
     @click="onClick"
+    @keydown="onKey"
   >
     <span
+      v-if="checking"
+      class="list-card-box"
+      aria-hidden="true"
+    ><svg
+      v-if="checked"
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="3"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    ><path d="m5 12 5 5 9-10" /></svg></span>
+    <span
+      v-else
       :class="['list-card-logo', showLogo ? 'image' : `c${colorIndex(name)} t${logoTone(name)}`]"
       aria-hidden="true"
     >
@@ -83,8 +119,8 @@ function onClick(event: MouseEvent): void {
       class="list-card-chips"
     ><slot name="chips" /></span>
     <!-- La flèche de la carte choisie dans une liste reliée au détail (ordinateur, §18 du 15 novembre). -->
-    <LinkedArrow v-if="selected" />
-  </a>
+    <LinkedArrow v-if="selected && !checking" />
+  </component>
 </template>
 
 <style>
@@ -123,6 +159,16 @@ function onClick(event: MouseEvent): void {
 @media (max-width: 820px) and (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .list-card-logo.c1 { background: var(--line); color: var(--text); } }
 @media (max-width: 820px) { :root[data-theme="dark"] .list-card-logo.c1 { background: var(--line); color: var(--text); } }
 .list-card-logo img { width: 100%; height: 100%; object-fit: contain; }
+/* Sélection multiple (planches CandidaturesSelection et CandidaturesOrdinateurSelection du 19.11) : la case de 24 px aux
+   coins de 6, trait de 2 px gris, au centre d'une zone de 44 ; cochée, pleine bleue et coche blanche ; la carte cochée a
+   un contour bleu de 2 px (outline, la taille ne bouge pas) et le fond --check-bg. */
+.list-card-check { cursor: pointer; }
+.list-card-box {
+  --box: 24px; --box-r: 6px; grid-area: logo; display: grid; place-items: center; width: var(--box); height: var(--box); box-sizing: border-box;
+  margin: calc((var(--target-min) - var(--box)) / 2); border: 2px solid var(--field-border); border-radius: var(--box-r);
+}
+.list-card-check[aria-checked="true"] .list-card-box { border-color: var(--action); background: var(--action); color: var(--on-action); }
+.list-card.list-card-check[aria-checked="true"] { border-color: var(--action); outline: 2px solid var(--action); outline-offset: -2px; background: var(--check-bg); }
 .list-card-text { grid-area: text; align-self: end; min-width: 0; display: flex; flex-direction: column; gap: var(--card-3); }
 .list-card:not(:has(.list-card-chips)) .list-card-text { align-self: center; }
 .list-card-title, .list-card-sub { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
@@ -160,7 +206,7 @@ function onClick(event: MouseEvent): void {
   .list-card-end { width: 72px; }
   .list-card > .list-card-chips { margin-top: var(--card-8); }
   .list-card > .list-card-chips > * { display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--card-2) var(--card-8); border-radius: var(--chip-r); line-height: normal; }
-  .list-card > .list-card-chips > :not(.peach, .blue, .green, .warn, .kept, .agency) { color: var(--text-lead); }
+  .list-card > .list-card-chips > :not(.peach, .blue, .green, .warn, .kept, .agency, .expired) { color: var(--text-lead); }
 }
 /* Planches CandidaturesOrdinateur* du 13.11 : hors téléphone, les carrés des cartes et de la tête de la fiche prennent
    cinq tons par les jetons (mêmes en clair et en sombre) : blanc à lettres rouges, blanc à lettres bleues, encre, bleu
