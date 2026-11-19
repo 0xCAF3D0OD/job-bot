@@ -28,7 +28,7 @@ import GroupedList from "./GroupedList.vue";
 import GroupedRow from "./GroupedRow.vue";
 import SegmentedControl from "./SegmentedControl.vue";
 import SuggestionChips from "./SuggestionChips.vue";
-import { cvChanges, type CvChange } from "../cvChanges";
+import { canUndo, cvChanges, type CvChange } from "../cvChanges";
 import DocSearch from "./DocSearch.vue";
 import { highlight, type Segment } from "../newsLabels";
 
@@ -321,6 +321,14 @@ const forCompany = computed(() => {
   return name ? `pour ${name}` : "pour cette annonce";
 });
 async function undo(change: CvChange): Promise<void> {
+  if (change.summaryUndo !== undefined) {
+    // Profil (Kevin, 19.11) : le résumé de la version de départ revient ; refusé, le champ reprend son texte.
+    const current = edit.value.summary;
+    edit.value.summary = change.summaryUndo;
+    if (await save()) savedAt.value = Date.now();
+    else edit.value.summary = current;
+    return;
+  }
   if (change.undo && (await save(change.undo))) savedAt.value = Date.now();
 }
 // Téléphone (§37 du 16.11, planches MaCandidatureCV et MaCandidatureCVPourquoi) : toucher un passage surligné ouvre la
@@ -1147,7 +1155,7 @@ onMounted(() => void load());
         </p>
         <div class="cv-why-actions">
           <button
-            v-if="changeOf.undo"
+            v-if="canUndo(changeOf)"
             type="button"
             class="secondary cv-why-undo"
             :disabled="saving"
@@ -1215,7 +1223,7 @@ onMounted(() => void load());
             >{{ part.text }}</mark><template v-else>{{ part.text }}</template></template></span>
           </span>
           <button
-            v-if="change.undo"
+            v-if="canUndo(change)"
             type="button"
             class="link cv-change-undo"
             :disabled="saving"
