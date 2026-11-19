@@ -2088,6 +2088,10 @@ watch(
 .expired-pill { justify-self: start; display: inline-flex; align-items: center; min-height: 26px; padding: var(--exp-pill-pad) var(--space-3); border-radius: var(--exp-pill-radius); background: var(--orange-soft); color: var(--orange-text); font-size: var(--font-caption); font-weight: var(--weight-bold); }
 .expired-card .expired-title { margin: var(--exp-gap) 0 0; font-size: var(--exp-title); font-weight: var(--weight-bold); }
 .expired-card .expired-text { margin: var(--exp-text-gap) 0 0; color: var(--text-secondary); font-size: var(--font-label); line-height: var(--exp-lh); }
+/* Ordinateur (Kevin, 19.11) : la carte « Offre expirée » a les marges des autres cartes de la fiche (18,5 / 24 px, comme
+   « .oc-company ») ; sans titre, la phrase garde les 10 px de la planche sous la pastille. */
+.oc-card.expired-card { padding: var(--oc-head-top) var(--oc-x); }
+.expired-card .expired-pill + .expired-text { margin-top: var(--exp-gap); }
 /* L'adresse (planches OffreAdresse du 18.11) : sur deux lignes, la pastille grise 10 px dessous ; « Modifier » ou
    « Ajouter l'adresse » en ligne pleine largeur sous un trait, texte bleu gras 15 px, chevron gris. */
 .address-lines { white-space: pre-line; }

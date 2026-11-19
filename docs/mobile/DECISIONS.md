@@ -1287,6 +1287,11 @@ D'après la barre de la planche Offre, pour toutes les barres du bas d'action du
 - Plus de lien texte centré sous le bouton principal, ni d'espace vide en dessous.
 - Premier écran : Ma candidature › Postuler (« J'ai déjà postulé » + « Ouvrir l'annonce ↗ »).
 
+## Panneau « Adapté pour cette offre » : annuler le Profil, titre d'une expérience (Kevin, 19.11.2026, 12 h 59)
+
+- « Annuler ce changement » existe aussi sur Profil. Le brouillon du CV garde le résumé de la version de départ (`origin_summary`, sans migration) : « Avant » cite l'ancien texte, « Annuler » le remet. Sans résumé de départ (première version), « Annuler » retire le résumé du CV adapté.
+- Une expérience déplacée a pour titre « Expérience chez <entreprise> », l'entreprise tirée du titre du bloc ; « Expériences » si on ne la trouve pas.
+
 ## K5 amendée : « Écarter » fait exception (Kevin, 19.11.2026, 13 h 35)
 
 Amende [la décision K5 du 17.11](2026-11-17-2150-offre-reste-en-place.md) (une offre qui change d'état reste à sa place jusqu'au changement de liste).
