@@ -629,12 +629,13 @@ const sheetExtra = computed<MoreMenuItem[]>(() => {
   const items: MoreMenuItem[] = [...nearbyItem.value];
   // « Remettre dans Nouvelles » seulement pour une offre gardée ou écartée (Kevin, 17.11, planche ActionsOffre).
   if (o.status === "later" || o.status === "ignored") {
-    items.push({ label: "Remettre dans Nouvelles", test: "back-to-review", icon: "refresh", run: () => emit("status", "to_review") });
+    items.push({ label: "Remettre dans Nouvelles", test: "back-to-review", icon: "undo", run: () => emit("status", "to_review") });
   }
   // Ordre de la planche ActionsOffre (et ActionsOffreGardee) du §72l : Demander à l'assistant, agence, expirée, note,
   // puis « Ouvrir l'annonce sur le site » et « Partager ».
   if (assistant.available.value) items.push({ label: "Demander à l’assistant", test: "ask-assistant", icon: "ai", run: askAssistant });
-  items.push(...markAgency.value);
+  // Icône de la planche : l'immeuble (le drapeau reste dans le menu de l'ordinateur).
+  items.push(...markAgency.value.map((item) => ({ ...item, icon: "building" as const })));
   if (o.status !== "applied") {
     items.push(
       o.expired_at
