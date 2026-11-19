@@ -2046,7 +2046,9 @@ watch(
 .match-now-link .icon { flex: none; width: var(--now-chevron); height: var(--now-chevron); }
 .match-now .field-error { align-self: stretch; margin: var(--space-2) 0 0; }
 .grey-pill { --pill-pad: 5px; --pill-radius: 15px; --pill-size: 13px; display: inline-flex; align-items: center; min-height: 30px; padding: var(--pill-pad) var(--space-3); border-radius: var(--pill-radius); background: var(--line-soft); color: var(--text-lead); font-size: var(--pill-size); font-weight: var(--weight-semibold); text-align: center; }
-.oc-now { --now-pad: 0px; }
+/* Ordinateur : 16 px sous la pastille, comme la planche OffreNonNotee (16 px de marge en bas de la carte), avec les 8 px
+   du bas de « .oc-head » (Kevin, 19.11 : pastille trop près du bord). */
+.oc-now { --now-pad: 0px; padding-bottom: var(--space-2); }
 /* « Offre expirée » (planche OffreExpiree du 18.11) : la pastille orange, le titre 17 px gras 10 px dessous, la
    phrase 15/21 px grise 4 px dessous. */
 .expired-card { --exp-gap: 10px; --exp-title: 17px; --exp-text-gap: 4px; --exp-lh: 21px; --exp-pill-pad: 3px; --exp-pill-radius: 13px; }
