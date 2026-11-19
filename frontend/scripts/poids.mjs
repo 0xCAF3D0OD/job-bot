@@ -38,6 +38,7 @@ export const LIMITS = {
   "js-trier": 106_000,
   "js-candidatures": 175_500,
   "js-candidatures-fichier": 175_500,
+  "js-candidatures-autres-offres": 175_500, // « Autres offres chez … » (planche Offre, 18.11), chargé à part : la limite de Candidatures
   "js-candidatures-menu": 175_500, // la feuille « ⋯ » de la fiche (téléphone), chargée à la demande : la limite de Candidatures
   "js-candidatures-compatibilite": 175_500, // la feuille de la compatibilité, chargée à la demande : la limite de Candidatures
   "js-candidatures-ajout": 175_500, // les formulaires du panneau « Ajouter », chargés à part : la limite de Candidatures
@@ -84,6 +85,7 @@ export const LIMITS = {
   "css-trier": 65_000,
   "css-candidatures": 72_500,
   "css-candidatures-fichier": 72_500,
+  "css-candidatures-autres-offres": 72_500, // « Autres offres chez … » (planche Offre, 18.11), chargé à part : la limite de Candidatures
   "css-candidatures-menu": 72_500, // la feuille « ⋯ » de la fiche (téléphone), chargée à la demande : la limite de Candidatures
   "css-candidatures-compatibilite": 72_500, // la feuille de la compatibilité, chargée à la demande : la limite de Candidatures
   "css-candidatures-ajout": 72_500, // les formulaires du panneau « Ajouter », chargés à part : la limite de Candidatures
@@ -146,8 +148,9 @@ export const PAGES = {
   candidatures: ["views/JobsView.vue", "views/OffersView.vue"], // Candidatures › Offres
   // La fiche d'une offre qui lit un fichier pour « Refaire la note » (Q1 du 17.11), chargé au premier fichier.
   "candidatures-fichier": ["views/JobsView.vue", "views/OffersView.vue", "offerFile.ts"],
-  // La feuille de la compatibilité de la fiche, chargée à la demande (décision de Kevin du 18.11, 13 h 37), mesurée
-  // avec la page sous les limites de Candidatures.
+  // Les blocs de la fiche d'une offre chargés à part (planche Offre du 18.11), chacun avec la page et sous ses limites :
+  // « Autres offres chez … » (téléphone, à l'ouverture de la fiche) et la feuille de la compatibilité (à la demande).
+  "candidatures-autres-offres": ["views/JobsView.vue", "views/OffersView.vue", "components/CompanyOffers.vue"],
   "candidatures-compatibilite": ["views/JobsView.vue", "views/OffersView.vue", "components/OfferCompatSheet.vue"],
   "candidatures-menu": ["views/JobsView.vue", "views/OffersView.vue", "components/OfferActionSheet.vue"],
   // Les formulaires du panneau « Ajouter » (une offre, une candidature spontanée), chargés à part et préchargés dès

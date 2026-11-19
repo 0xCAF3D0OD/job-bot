@@ -4,8 +4,8 @@ import { createMemoryHistory, createRouter } from "vue-router";
 
 import OfferDetail from "./OfferDetail.vue";
 
-// Chargé une fois d’avance : son import() se résout alors dans le même tour que dans le navigateur.
-await Promise.all([import("./OfferCompatSheet.vue"), import("./OfferActionSheet.vue")]);
+// Chargés une fois d’avance : leur import() se résout alors dans le même tour que dans le navigateur.
+await Promise.all([import("./CompanyOffers.vue"), import("./OfferCompatSheet.vue"), import("./OfferActionSheet.vue")]);
 
 const POST = vi.fn();
 vi.mock("../api/client", () => ({
@@ -326,6 +326,55 @@ describe("OfferDetail sur téléphone, une sous-page (maquette Offre, docs/139 �
     expect(wrapper.find("[data-test=section-for-you] [data-test=compat-open]").text()).toBe("Voir la compatibilité");
     expect(wrapper.findComponent({ name: "OfferCompatSheet" }).props("how")).toContain("Kubernetes, Terraform et CI/CD : dans ton profil.");
     expect(wrapper.find("[data-test=section-for-you] [data-test=score-correction-open]").exists()).toBe(false);
+    vi.unstubAllGlobals();
+  });
+
+  it("planche Offre (18.11) : grille Taux · Contrat · Télétravail, date sur la ligne de l'entreprise, passages surlignés, autres offres", async () => {
+    phone();
+    const { api } = await import("../api/client");
+    const others = [
+      { id: 7, title: "SRE | PLATEFORME", company: "exemple sa ", location: "Lausanne, VD", rate_min: 100, rate_max: 100, score: 78, status: "to_review", first_seen_at: "2026-10-01T08:00:00Z" },
+      { id: 8, title: "Platform Engineer", company: "Exemple SA", location: "Lausanne", rate_min: 80, rate_max: 80, score: 60, status: "applied", first_seen_at: "2026-09-28T08:00:00Z" },
+      { id: 4, title: "Ingénieur DevOps", company: "Exemple SA", location: "Lausanne", status: "to_review" },
+      { id: 9, title: "Autre", company: "Exemple Services SA", location: "Lausanne", status: "to_review" },
+    ];
+    vi.mocked(api.GET).mockImplementation((() => Promise.resolve({ data: { items: others, total: 4 } })) as never);
+    const wrapper = await mountDetail(
+      offer({
+        rate_min: 80, rate_max: 100, employment_type: "CDI", remote: "hybrid", remote_days: 2, description: "Texte complet.",
+        summary_role: "Automatiser l’infrastructure Kubernetes et les pipelines GitLab CI.",
+        strengths: [{ text: "Kubernetes : 40 services.", chunk_ids: [] }, { text: "GitLab CI : pipelines.", chunk_ids: [] }],
+      }),
+    );
+    const cells = wrapper.findAll("[data-test=offer-grid] > div").map((c) => [c.find("dt").text(), c.find("dd").text()]);
+    expect(cells).toEqual([["Taux", "80–100 %"], ["Contrat", "CDI"], ["Télétravail", "2 j/sem."]]);
+    expect(wrapper.find("[data-test=offer-tags]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=detail-meta]").text()).toMatch(/· reçue le 5 oct\.$/);
+    // Les compétences des points forts, surlignées dans le résumé ; pas de « Résumé par jobA1 ».
+    expect(wrapper.findAll("[data-test=summary] mark").map((m) => m.text())).toEqual(["Kubernetes", "GitLab CI"]);
+    expect(wrapper.find("[data-test=summary]").text()).toBe("Automatiser l’infrastructure Kubernetes et les pipelines GitLab CI.");
+    expect(wrapper.find("[data-test=summary-by]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=summary-legend]").text()).toBe("2 passages qui correspondent à ton profil");
+    // Les offres de la même entreprise seulement (casse et espaces ignorés), sans l'offre ouverte.
+    expect(api.GET).toHaveBeenCalledWith("/api/offers", { params: { query: { q: "Exemple SA", view: "all", sort: "recent", limit: 50 } } });
+    const card = wrapper.find("[data-test=company-offers]");
+    expect(card.find("h3").text()).toBe("Autres offres chez Exemple SA · 2");
+    const rows = card.findAll("[data-test=company-offer]");
+    expect(rows.map((r) => r.find("b").text())).toEqual(["SRE · Plateforme", "Platform Engineer"]);
+    expect(rows[0]!.text()).toContain("Lausanne · 100 % · 1 oct.");
+    expect(rows[0]!.find(".company-offer-pill").text()).toBe("Note 78");
+    expect(rows[1]!.find(".company-offer-pill").text()).toBe("Envoyée");
+    expect(rows[0]!.attributes("href")).toBe("/candidatures/offres/7");
+    vi.unstubAllGlobals();
+  });
+
+  it("planche Offre : sans point fort reconnu ni autre offre, ni légende ni carte ; une valeur inconnue le dit", async () => {
+    phone();
+    const wrapper = await mountDetail(offer({ summary_role: "Un poste.", strengths: [] }));
+    expect(wrapper.find("[data-test=summary] mark").exists()).toBe(false);
+    expect(wrapper.find("[data-test=summary-legend]").exists()).toBe(false);
+    expect(wrapper.find("[data-test=company-offers]").exists()).toBe(false);
+    expect(wrapper.findAll("[data-test=offer-grid] dd").map((d) => d.text())).toEqual(["Non précisé", "Non précisé", "Non précisé"]);
     vi.unstubAllGlobals();
   });
 

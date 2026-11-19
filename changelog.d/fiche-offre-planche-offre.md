@@ -1,0 +1,1 @@
+Fiche d'une offre sur téléphone, d'après la planche Offre du 18.11 : Taux, Contrat et Télétravail en grille, la date sur la ligne de l'entreprise, les compétences de tes points forts surlignées dans « Le poste », et la carte « Autres offres chez … »
