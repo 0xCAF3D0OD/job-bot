@@ -789,3 +789,6 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.575 | Préparer le rendez-vous (téléphone) : « Annuler » et « Ajouter » sous le champ d'une nouvelle question (§72b), ⋯ « Retirer » sur les questions proposées par jobA1 (le serveur ne les remet plus), bandeau « Question retirée » 5 s ; FeuilleNom sans la phrase « Tout est enregistré… » (§72g) | livrée |
 | 1.6.576 | Textes raccourcis du §72k : 28 phrases plus courtes sur téléphone et ordinateur, sans changement de mise en page | livrée |
 | 1.6.577 | Fiche d'une offre sur téléphone, d'après la planche Offre du 18.11 : Taux, Contrat et Télétravail en grille, la date sur la ligne de l'entreprise, les compétences de tes points forts surlignées dans « Le poste », et la carte « Autres offres chez … » | livrée |
+| 1.6.578 | Alertes sur téléphone : sans alerte, l’écran AlertesVide (scène de l’Accueil, « Créer une alerte » qui ouvre la création des premiers pas et y revient) | livrée |
+| 1.6.579 | Alertes : plus de phrase d’aide sous les titres « À confirmer », « Actives » et « À créer » (§72g), la ligne porte déjà l’état | livrée |
+| 1.6.580 | Premiers pas, étape alerte : la phrase devient « Une alerte jobup, et tes offres arrivent toutes seules. » (et « Environ 2 minutes. » sur téléphone, §72g et §72h) | livrée |
