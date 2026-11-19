@@ -27235,6 +27235,11 @@
             ],
             "title": "Orp Meeting At"
           },
+          "orp_meetings_to_note": {
+            "type": "integer",
+            "title": "Orp Meetings To Note",
+            "default": 0
+          },
           "rhythm": {
             "anyOf": [
               {

@@ -83,7 +83,9 @@ async function refresh(): Promise<void> {
     "rendez-vous": 0,
   };
   // Les pastilles des planches (§47) : les offres nouvelles (statut « Nouvelles », §38) et les rendez-vous passés à noter.
-  fresh.value = { offres: today.data?.to_review ?? 0, "rendez-vous": today.data?.interviews_to_review?.length ?? 0 };
+  // Rendez-vous : tout ce qui est dans « À noter », entretiens et rendez-vous ORP (planche RendezVous §72u, Kevin 19.11).
+  const toNote = (today.data?.interviews_to_review?.length ?? 0) + (today.data?.orp_meetings_to_note ?? 0);
+  fresh.value = { offres: today.data?.to_review ?? 0, "rendez-vous": toNote };
 }
 
 // « + Ajouter » de l'en-tête (maquette du 14 novembre, §6) : sur Rendez-vous, le seul bouton d'ajout ; il ouvre le

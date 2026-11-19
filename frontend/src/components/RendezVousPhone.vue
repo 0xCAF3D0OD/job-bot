@@ -5,19 +5,20 @@ import type { Application } from "../api/client";
 import type { components } from "../api/schema";
 import {
   agreedLines,
-  dateText,
   meetingsToNote,
   notedMeetings,
   pastTitle,
   sheetLines,
-  timeAndPlace,
   upcomingAppointments,
   upcomingLabel,
   upcomingWhen,
   upcomingWhere,
   appointmentMatches,
+  interviewsToNote,
   meetingMatches,
+  type InterviewToNote,
 } from "../rendezVous";
+import { dateInSentence, dayMonthShort, todayDay } from "../dates";
 import { plural } from "../format";
 import { useSheetIdentity } from "../sheetIdentity";
 import CalendarDate from "./CalendarDate.vue";
@@ -92,6 +93,21 @@ function nameClosed(): void {
 
 // À noter, puis le dernier rendez-vous ORP noté.
 const toNote = computed(() => meetingsToNote(props.page, now).filter((m) => meetingMatches(m, words.value)));
+// Les entretiens passés sans point fait, même règle que le badge de l'onglet (§72u, Kevin 19.11).
+const points = computed(() =>
+  interviewsToNote(props.applications, now).filter((item) => appointmentMatches({ kind: "entretien", key: item.key, at: item.at, application: item.application }, words.value)),
+);
+type ToNoteRow = { key: string; at: string } & ({ kind: "orp"; meeting: Meeting } | (InterviewToNote & { kind: "point" }));
+const toNoteRows = computed<ToNoteRow[]>(() =>
+  [
+    ...toNote.value.map((meeting): ToNoteRow => ({ kind: "orp", key: `orp-${meeting.id}`, at: meeting.starts_at, meeting })),
+    ...points.value.map((item): ToNoteRow => ({ ...item, kind: "point" })),
+  ].sort((a, b) => Date.parse(a.at) - Date.parse(b.at)),
+);
+// « ORP du 13 octobre ».
+const orpTitle = (at: string): string => `ORP ${dateInSentence(at, now).replace(/^le /, "du ")}`;
+// « Entretien · Témoin Industrie · 5 nov. ».
+const pointLine = (item: InterviewToNote): string => `Entretien · ${item.application.company} · ${dayMonthShort(todayDay(new Date(item.at)))}`;
 const last = computed<Meeting | null>(() => notedMeetings(props.page, now).filter((m) => meetingMatches(m, words.value))[0] ?? null);
 // Maquette du 8 novembre (D26) : la date dans l'icône calendrier de 48 px (CalendarDate), plus de carré coloré.
 function cal(iso: string): { day: number; month: number } {
@@ -228,9 +244,11 @@ function cal(iso: string): { day: number; month: number } {
     </template>
   </section>
 
-  <!-- À noter (maquette du 7.11) : un rendez-vous ORP passé dont rien n'est noté ; « Noter » ouvre la feuille. -->
+  <!-- À noter (planche RendezVous, §72u du 19.11) : les rendez-vous ORP passés sans rien de noté et les entretiens passés
+       sans point fait, du plus ancien au plus récent. Une carte par rendez-vous, toute la carte est la cible : l’ORP ouvre
+       la feuille « Ce qui a été convenu », l’entretien la page Faire le point. -->
   <section
-    v-else-if="part === 'to-note' && toNote.length"
+    v-else-if="part === 'to-note' && toNoteRows.length"
     class="rdv-part"
     aria-labelledby="rdv-a-noter"
     data-test="rdv-to-note"
@@ -239,41 +257,62 @@ function cal(iso: string): { day: number; month: number } {
       id="rdv-a-noter"
       class="rdv-title"
     >
-      À noter<span>{{ plural(toNote.length, "rendez-vous", "rendez-vous") }}</span>
+      À noter<span>{{ plural(toNoteRows.length, "rendez-vous", "rendez-vous") }}</span>
     </h2>
-    <article
-      v-for="item in toNote"
-      :key="item.id"
-      class="rdv-card rdv-last"
-      :data-test="`rdv-to-note-${item.id}`"
+    <template
+      v-for="row in toNoteRows"
+      :key="row.key"
     >
-      <div class="rdv-last-head">
+      <article
+        v-if="row.kind === 'orp'"
+        class="rdv-card rdv-interview"
+        :data-test="`rdv-to-note-${row.meeting.id}`"
+      >
         <CalendarDate
           class="rdv-date"
-          v-bind="cal(item.starts_at)"
+          v-bind="cal(row.at)"
           tone="orp"
         />
         <div class="rdv-body">
-          <h3 class="rdv-last-title">
-            Rendez-vous ORP
-          </h3>
-          <!-- Plus de « Pas encore noté » (lot 14) : le groupe « À noter » le dit déjà. -->
-          <!-- « Vendredi 30 octobre, 11 h · EPFL » : le lieu tel que saisi, sans changer sa casse. -->
-          <span
-            class="rdv-meta"
-            data-test="rdv-to-note-meta"
-          >{{ `${dateText(item.starts_at)}, ${timeAndPlace(item.starts_at, item.place)}` }}</span>
+          <span class="rdv-line">
+            <h3 class="rdv-interview-title">{{ orpTitle(row.at) }}</h3>
+            <span class="rdv-ready rdv-peach">À noter</span>
+          </span>
+          <span class="rdv-meta rdv-cut">1 minute pour noter l’essentiel</span>
         </div>
-      </div>
-      <button
-        type="button"
-        class="rdv-note"
-        data-test="rdv-note"
-        @click="emit('note', item.id)"
+        <button
+          type="button"
+          class="rdv-prepare"
+          :aria-label="`${orpTitle(row.at)}, à noter`"
+          data-test="rdv-note"
+          @click="emit('note', row.meeting.id)"
+        />
+      </article>
+      <article
+        v-else
+        class="rdv-card rdv-interview"
+        :data-test="`rdv-to-note-point-${row.application.id}`"
       >
-        Noter ce qui a été convenu
-      </button>
-    </article>
+        <CalendarDate
+          class="rdv-date"
+          v-bind="cal(row.at)"
+          tone="orp"
+        />
+        <div class="rdv-body">
+          <span class="rdv-line">
+            <h3 class="rdv-interview-title">{{ row.application.job_title || "Poste non indiqué" }}</h3>
+            <span class="rdv-ready rdv-peach">À noter</span>
+          </span>
+          <span class="rdv-meta rdv-cut">{{ pointLine(row) }}</span>
+        </div>
+        <RouterLink
+          class="rdv-prepare"
+          :to="`/entretien/${row.application.id}/faire-le-point`"
+          :aria-label="`${row.application.job_title || 'Poste non indiqué'}, ${pointLine(row)}, à noter`"
+          :data-test="`rdv-point-${row.application.id}`"
+        />
+      </article>
+    </template>
   </section>
   <template v-else-if="part === 'past'">
     <!-- Le titre « Derniers rendez-vous ORP » revient avec la planche RendezVous du 18.11 (Kevin, 18.11), sans nombre. -->
@@ -379,6 +418,7 @@ function cal(iso: string): { day: number; month: number } {
 .rdv-orp-title, .rdv-interview-title, .rdv-when > * + * { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .rdv-orp-title, .rdv-interview-title { margin: 0; font-size: var(--font-body); line-height: var(--rdv-22); font-weight: var(--weight-bold); }
 .rdv-meta { font-size: var(--font-small); color: var(--text-secondary); }
+.rdv-cut { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .rdv-ready {
   flex: none; padding: var(--space-1) var(--space-2); border-radius: var(--radius-pill); white-space: nowrap;
   background: var(--success-soft); color: var(--success); font-size: var(--font-caption); line-height: var(--rdv-14); font-weight: var(--weight-bold);

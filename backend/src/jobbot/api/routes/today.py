@@ -21,6 +21,7 @@ from jobbot.db.models import (
     JobRunStatus,
     Offer,
     OfferStatus,
+    OrpMeeting,
     OrpMonth,
     Setting,
 )
@@ -28,6 +29,7 @@ from jobbot.followups.remind import remind_due
 from jobbot.insights import service as insights_service
 from jobbot.notify import interviews as interview_reminders
 from jobbot.orp import meeting as orp_meeting
+from jobbot.orp import outcome as orp_outcome
 from jobbot.orp.service import load_canton, load_due_day
 from jobbot.rhythm import service as rhythm
 from jobbot.runtime import Runtime
@@ -199,6 +201,9 @@ class TodayOut(BaseModel):
     orp_history: list[MonthResult] = []
     # Rendez-vous ORP aujourd'hui ou demain : la feuille est prête (docs/83).
     orp_meeting_at: datetime | None = None
+    # Rendez-vous ORP passés sans rien de noté : avec les entretiens à noter, le badge de
+    # l'onglet Rendez-vous (planche RendezVous §72u, Kevin 19.11), comme « À noter ».
+    orp_meetings_to_note: int = 0
     # Ta semaine (docs/86) : la part de l'objectif, et si aujourd'hui est un jour de recherche.
     rhythm: RhythmWeek | None = None
 
@@ -244,6 +249,17 @@ async def _week(session: AsyncSession, today: date) -> list[DayActivity]:
         DayActivity(day=d, offers=int(offers.get(d, 0)), applications=int(sent.get(d, 0)))
         for d in days
     ]
+
+
+async def _meetings_to_note(
+    session: AsyncSession, meeting: OrpMeeting | None, now: datetime
+) -> int:
+    """Les rendez-vous ORP passés sans rien de noté, comme `meetingsToNote` (rendezVous.ts) :
+    le prochain s'il a commencé, puis ceux d'avant aujourd'hui (le Carnet ORP)."""
+    started = [meeting] if meeting is not None and meeting.starts_at <= now else []
+    past = await orp_outcome.past(session, now)
+    before = [m for m in past if meeting is None or m.id != meeting.id]
+    return sum(1 for m in [*started, *before] if m.outcome_at is None)
 
 
 @router.get("/today", operation_id="getToday")
@@ -388,6 +404,7 @@ async def get_today(request: Request) -> TodayOut:
             await first_steps_service.first_application(session) if steps.just_finished else None
         )
         meeting = await orp_meeting.next_meeting(session, datetime.now(UTC))
+        orp_meetings_to_note = await _meetings_to_note(session, meeting, datetime.now(UTC))
         this_week = await rhythm.week(session, rhythm.local_today())
     soon = meeting is not None and (
         meeting.starts_at.astimezone(LOCAL_TZ).date()
@@ -440,6 +457,7 @@ async def get_today(request: Request) -> TodayOut:
         week=week,
         orp_history=orp_history,
         orp_meeting_at=meeting.starts_at if meeting is not None and soon else None,
+        orp_meetings_to_note=orp_meetings_to_note,
         rhythm=RhythmWeek(
             target=this_week.target,
             count=this_week.count,

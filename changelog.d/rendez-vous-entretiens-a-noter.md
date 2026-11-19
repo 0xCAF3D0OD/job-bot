@@ -1,0 +1,1 @@
+Rendez-vous sur téléphone : « À noter » montre aussi les entretiens passés sans point fait, qui ouvrent Faire le point, et le badge de l'onglet compte tout ce qui est à noter, rendez-vous ORP compris (§72u)

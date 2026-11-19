@@ -32,7 +32,7 @@ import { useSheetIdentity } from "../sheetIdentity";
 import InterviewPreparation from "../components/InterviewPreparation.vue";
 import RendezVousPhone from "../components/RendezVousPhone.vue";
 import OfferSearch from "../components/OfferSearch.vue";
-import { appointmentMatches, meetingMatches, meetingsToNote, notedMeetings, searchWords, upcomingAppointments } from "../rendezVous";
+import { appointmentMatches, interviewsToNote, meetingMatches, meetingsToNote, notedMeetings, searchWords, upcomingAppointments } from "../rendezVous";
 import { usePhone } from "../composables/usePhone";
 
 // Une case enregistrée tout de suite : « Enregistré », annoncé (WCAG 4.1.3).
@@ -344,7 +344,8 @@ const searchEmpty = computed(() => {
   const now = new Date();
   const upcoming = upcomingAppointments(page.value.meeting ?? null, applications.value, now).some((item) => appointmentMatches(item, words.value));
   const past = [...meetingsToNote(page.value, now), ...notedMeetings(page.value, now)].some((m) => meetingMatches(m, words.value));
-  return !upcoming && !past;
+  const points = interviewsToNote(applications.value, now).some((item) => appointmentMatches({ ...item, kind: "entretien" }, words.value));
+  return !upcoming && !past && !points;
 });
 function openSheet(part?: "carnet"): void {
   void router.push({ query: { ...route?.query, feuille: part ?? "1" } });
