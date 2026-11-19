@@ -1,9 +1,10 @@
 // Candidatures › Rendez-vous sur téléphone (maquettes RendezVous et RendezVousSombre, 6.11.2026) : ce qui est
 // calculé, sans affichage, pour être testé seul. La liste « À venir » mêle le prochain rendez-vous ORP et les
 // entretiens d'embauche à venir (applications.interview_at), triés par date.
-import type { Application } from "./api/client";
+import type { Application, Interview } from "./api/client";
 import type { components } from "./api/schema";
-import { dateInSentence, inDays, meetingDate, timeOfDay } from "./dates";
+import { dateInSentence, inDays, meetingDate, timeOfDay, todayDay } from "./dates";
+import { FEELINGS } from "./interviewLabels";
 import { plural } from "./format";
 
 type Meeting = components["schemas"]["MeetingOut"];
@@ -195,4 +196,47 @@ export function appointmentMatches(item: Upcoming, words: string[]): boolean {
   if (item.kind === "orp") return meetingMatches(item.meeting, words);
   const a = item.application;
   return hasAll(`${a.job_title} ${a.company} ${a.location ?? ""} ${interviewPlace(a) ?? ""}`, words);
+}
+
+// « Faire le point » sur ordinateur (planche FairePointOrdinateur, §72m ; accord de Kevin du 19.11.2026) : les entretiens
+// passés vont dans Rendez-vous. « À noter » tant que le point n'est pas fait, puis « Passés », pour garder tout
+// l'historique au même endroit.
+export type InterviewToNote = { key: string; at: string; application: Application };
+export type NotedInterview = { key: string; at: string; application: Application; interview: Interview };
+
+/** Les entretiens passés dont le point n'est pas fait (aucun retour ce jour-là), du plus récent au plus ancien. */
+export function interviewsToNote(applications: Application[], now: Date = new Date()): InterviewToNote[] {
+  const items: InterviewToNote[] = [];
+  for (const application of applications) {
+    const at = application.interview_at;
+    if (!at || application.status !== "entretien" || Date.parse(at) > now.getTime()) continue;
+    const day = todayDay(new Date(at));
+    if (application.interviews?.some((i) => i.held_at === day)) continue;
+    items.push({ key: `point-${application.id}`, at, application });
+  }
+  return items.sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
+}
+
+/** Les retours d'entretien faits, du plus récent au plus ancien. L'heure n'est connue que pour l'entretien prévu. */
+export function notedInterviews(applications: Application[], now: Date = new Date()): NotedInterview[] {
+  const items: NotedInterview[] = [];
+  for (const application of applications) {
+    for (const interview of application.interviews ?? []) {
+      if (!interview.held_at || interview.held_at > todayDay(now)) continue;
+      const planned = application.interview_at;
+      const at = planned && todayDay(new Date(planned)) === interview.held_at ? planned : `${interview.held_at}T00:00:00`;
+      items.push({ key: `retour-${interview.id}`, at, application, interview });
+    }
+  }
+  return items.sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
+}
+
+/** « Entretien · DevOps Engineer ». */
+export function interviewTitle(application: Application): string {
+  return `Entretien · ${application.job_title || "Poste non indiqué"}`;
+}
+
+/** Sous un retour fait : « Point fait · Moyen » (le ressenti en mots, s'il a été donné). */
+export function pointDone(interview: Interview): string {
+  return interview.feeling ? `Point fait · ${FEELINGS[interview.feeling]}` : "Point fait";
 }

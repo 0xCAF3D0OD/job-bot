@@ -443,6 +443,7 @@ onMounted(() => {
       :editing="editing"
       :save-questions="saveQuestions"
       :name-line="nameLine"
+      :reload-applications="loadApplications"
       @toggle="toggle"
       @sheet="openSheet()"
       @name="openName"
