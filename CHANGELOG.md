@@ -782,3 +782,5 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.568 | Statut de candidature « Réponse reçue » (choisi à la main) et filtres des Envoyées : Toutes, À relancer, Envoyée, Réponse reçue, Entretien, Refusée | livrée |
 | 1.6.569 | Migrations : la distance des offres passe en 0095, après la 0094 des premiers pas, pour qu'il n'y ait plus deux têtes sur main | livrée |
 | 1.6.570 | Candidatures plus légère : les formulaires du panneau « Ajouter » se chargent à part, préchargés dès l'affichage de la page (la page repasse sous sa limite après Distance). | livrée |
+| 1.6.571 | « Faire le point » devient une page entière sur téléphone (planche FairePoint) : ressenti, suite et notes, relance calculée à 7 jours. | livrée |
+| 1.6.572 | Rendez-vous sur ordinateur : le rendez-vous ORP ouvert refait d'après la planche RendezVousOrdinateurOuvert (§72), avec ⋯ par question, ajout dans la carte et « La feuille ». | livrée |
