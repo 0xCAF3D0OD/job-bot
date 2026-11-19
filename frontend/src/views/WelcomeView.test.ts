@@ -556,7 +556,7 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     expect(wrapper.get("h1").text().replace(/\s+/g, " ")).toBe("Chercher Recevoir.");
     const alert = wrapper.get("[data-test=welcome-alert]");
     // Section 41 du paquet du 16.11 : la phrase sous le titre, puis 4 étapes ; une seule recherche, la première.
-    expect(wrapper.text()).toContain("Pour recevoir les nouvelles offres, crée une alerte sur jobup.");
+    expect(wrapper.text()).toContain("Une alerte jobup, et tes offres arrivent toutes seules.");
     expect(alert.findAll("li.wa-step")).toHaveLength(4);
     expect(alert.get("[data-test=welcome-alert-step-1]").attributes("aria-current")).toBe("step");
     expect(alert.text()).toContain("jobA1 a préparé ta recherche : DevOps · Lausanne et 30 km.");
@@ -734,7 +734,7 @@ describe("premiers pas sur ordinateur (MODIFICATIONS_9 §5, OnboardingOrdinateur
     expect(wrapper.get("[data-test=welcome-eyebrow]").text()).toBe("Étape 3 sur 4");
     expect(wrapper.get("h1").text()).toBe("Crée ton alerte sur jobup");
     // Section 41 du paquet du 16.11 : la phrase sous le titre, sans durée, puis une carte de 4 étapes.
-    expect(wrapper.get(".wdk-lead").text()).toBe("Pour recevoir les nouvelles offres, tu crées une alerte sur jobup. C’est ainsi que jobA1 reçoit tes offres.");
+    expect(wrapper.get(".wdk-lead").text()).toBe("Une alerte jobup, et tes offres arrivent toutes seules.");
     const card = wrapper.get("[data-test=welcome-alert]");
     expect(card.classes()).toContain("wa-desk");
     expect(card.findAll("li.wa-step")).toHaveLength(4);
