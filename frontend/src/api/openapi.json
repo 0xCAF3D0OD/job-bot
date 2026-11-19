@@ -7770,6 +7770,88 @@
         }
       }
     },
+    "/api/droits": {
+      "get": {
+        "tags": [
+          "droits"
+        ],
+        "summary": "Get Droits",
+        "operationId": "getDroits",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DroitsOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/droits/situation": {
+      "get": {
+        "tags": [
+          "droits"
+        ],
+        "summary": "Get Situation",
+        "operationId": "getDroitsSituation",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SituationIO"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "droits"
+        ],
+        "summary": "Save Situation",
+        "description": "Ta situation, gardée dans ton compte, jamais envoyée à l'IA (§72t). Champ vide : retiré.",
+        "operationId": "saveDroitsSituation",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SituationIO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SituationIO"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/certificates": {
       "get": {
         "tags": [
@@ -14127,6 +14209,16 @@
             "type": "string",
             "format": "date-time",
             "title": "Created At"
+          },
+          "droits": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RightsLinkOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "type": "object",
@@ -16354,6 +16446,130 @@
         ],
         "title": "DoubtOut"
       },
+      "DroitsOut": {
+        "properties": {
+          "source_label": {
+            "type": "string",
+            "title": "Source Label"
+          },
+          "verified": {
+            "type": "string",
+            "format": "date",
+            "title": "Verified"
+          },
+          "texts": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Texts"
+          },
+          "figures": {
+            "$ref": "#/components/schemas/FiguresOut"
+          },
+          "situation_complete": {
+            "type": "boolean",
+            "title": "Situation Complete"
+          },
+          "topics": {
+            "items": {
+              "$ref": "#/components/schemas/TopicOut"
+            },
+            "type": "array",
+            "title": "Topics"
+          },
+          "duties": {
+            "$ref": "#/components/schemas/DutiesOut"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/SourceOut"
+            },
+            "type": "array",
+            "title": "Sources"
+          }
+        },
+        "type": "object",
+        "required": [
+          "source_label",
+          "verified",
+          "texts",
+          "figures",
+          "situation_complete",
+          "topics",
+          "duties",
+          "sources"
+        ],
+        "title": "DroitsOut"
+      },
+      "DutiesOut": {
+        "properties": {
+          "searches_title": {
+            "type": "string",
+            "title": "Searches Title"
+          },
+          "searches_phrase": {
+            "type": "string",
+            "title": "Searches Phrase"
+          },
+          "searches_count": {
+            "type": "integer",
+            "title": "Searches Count"
+          },
+          "searches_target": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Searches Target"
+          },
+          "month": {
+            "type": "string",
+            "title": "Month"
+          },
+          "meeting_title": {
+            "type": "string",
+            "title": "Meeting Title"
+          },
+          "meeting_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meeting At"
+          },
+          "holidays_title": {
+            "type": "string",
+            "title": "Holidays Title"
+          },
+          "holidays_phrase": {
+            "type": "string",
+            "title": "Holidays Phrase"
+          }
+        },
+        "type": "object",
+        "required": [
+          "searches_title",
+          "searches_phrase",
+          "searches_count",
+          "searches_target",
+          "month",
+          "meeting_title",
+          "meeting_at",
+          "holidays_title",
+          "holidays_phrase"
+        ],
+        "title": "DutiesOut"
+      },
       "EmployerOut": {
         "properties": {
           "address": {
@@ -16574,6 +16790,92 @@
           "claim_id"
         ],
         "title": "FalseClaimOut"
+      },
+      "FiguresOut": {
+        "properties": {
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total"
+          },
+          "restants": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Restants"
+          },
+          "taux": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Taux"
+          },
+          "fin": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fin"
+          },
+          "vacances_acquis": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vacances Acquis"
+          },
+          "vacances_disponibles": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vacances Disponibles"
+          },
+          "avs": {
+            "type": "boolean",
+            "title": "Avs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "restants",
+          "taux",
+          "fin",
+          "vacances_acquis",
+          "vacances_disponibles",
+          "avs"
+        ],
+        "title": "FiguresOut"
       },
       "FillIdentity": {
         "properties": {
@@ -20101,6 +20403,29 @@
         },
         "type": "object",
         "title": "LetterRequest"
+      },
+      "LineOut": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "detail",
+          "source"
+        ],
+        "title": "LineOut"
       },
       "LinkCreated": {
         "properties": {
@@ -24794,6 +25119,48 @@
         "title": "RhythmWeek",
         "description": "Le bon rythme (docs/86) : la part de l'objectif ORP pour cette semaine."
       },
+      "RightsLinkOut": {
+        "properties": {
+          "subject": {
+            "type": "string",
+            "title": "Subject"
+          },
+          "to": {
+            "type": "string",
+            "title": "To"
+          },
+          "action": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Action"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "verified": {
+            "type": "string",
+            "format": "date",
+            "title": "Verified"
+          }
+        },
+        "type": "object",
+        "required": [
+          "subject",
+          "to",
+          "action",
+          "source",
+          "verified"
+        ],
+        "title": "RightsLinkOut",
+        "description": "Sous une réponse qui a lu docs/droits (§72r) : le lien, l'action, la source."
+      },
       "ScoreNowOut": {
         "properties": {
           "score": {
@@ -26705,6 +27072,129 @@
         "title": "SiteSuggestion",
         "description": "Site d'offres en télétravail proposé en un clic (docs/26 §5)."
       },
+      "SituationIO": {
+        "properties": {
+          "inscription": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inscription"
+          },
+          "mois": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "12_17",
+                  "18_21",
+                  "22_24"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mois"
+          },
+          "age": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "moins_25",
+                  "25_54",
+                  "55_plus"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Age"
+          },
+          "enfants": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enfants"
+          },
+          "gain": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 100000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gain"
+          },
+          "touchees": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 1000.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Touchees"
+          },
+          "vacances_prises": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 500.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vacances Prises"
+          }
+        },
+        "type": "object",
+        "title": "SituationIO"
+      },
+      "SourceOut": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "name",
+          "url"
+        ],
+        "title": "SourceOut"
+      },
       "SpontaneousIn": {
         "properties": {
           "company": {
@@ -27262,6 +27752,85 @@
           "last_used_at"
         ],
         "title": "TokenOut"
+      },
+      "TopicOut": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "phrase": {
+            "type": "string",
+            "title": "Phrase"
+          },
+          "keyword": {
+            "type": "string",
+            "title": "Keyword"
+          },
+          "keyword_sub": {
+            "type": "string",
+            "title": "Keyword Sub"
+          },
+          "keyword_missing": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Keyword Missing"
+          },
+          "keyword_sub_missing": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Keyword Sub Missing"
+          },
+          "source_label": {
+            "type": "string",
+            "title": "Source Label"
+          },
+          "verified": {
+            "type": "string",
+            "format": "date",
+            "title": "Verified"
+          },
+          "action": {
+            "type": "string",
+            "title": "Action"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/LineOut"
+            },
+            "type": "array",
+            "title": "Lines"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "title",
+          "phrase",
+          "keyword",
+          "keyword_sub",
+          "source_label",
+          "verified",
+          "action",
+          "lines"
+        ],
+        "title": "TopicOut"
       },
       "TrainingMarkIn": {
         "properties": {

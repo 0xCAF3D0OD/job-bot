@@ -30,6 +30,9 @@ from jobbot.db.models import (
     Training,
     TrainingMark,
 )
+from jobbot.droits import regles
+from jobbot.droits.regles import TOPICS
+from jobbot.droits.service import PLACEHOLDERS
 from jobbot.filtering.service import load_criteria
 from jobbot.followups.remind import REMIND_AFTER_DAYS, remind_due, remind_on
 from jobbot.insights import service as insight_service
@@ -154,6 +157,25 @@ TOOLS: list[dict[str, Any]] = [
         "terminée), avec la progression.",
         "input_schema": {"type": "object", "properties": {}},
     },
+    {
+        "name": "droits",
+        "description": "Les règles vérifiées des droits au chômage (docs/droits) : "
+        "indemnités, taux, délai-cadre, vacances, formation, gain intermédiaire, frais, "
+        "maladie, opposition, devoirs. Seule source pour répondre sur les droits. Ne rend "
+        "aucun chiffre de la personne : écris la clé entre doubles accolades "
+        "(« {{vacances}} »), la plateforme la remplace à l'affichage.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "sujet": {
+                    "type": "string",
+                    "enum": ["general", *TOPICS],
+                    "description": "le sujet de la question ; « general » pour le reste",
+                }
+            },
+            "required": ["sujet"],
+        },
+    },
 ]
 
 LABELS = {
@@ -169,6 +191,7 @@ LABELS = {
     "criteres": "tes critères",
     "formations": "tes formations",
     "document": "le document joint",
+    "droits": "les règles de tes droits",
 }
 
 
@@ -565,6 +588,55 @@ async def _trainings(session: AsyncSession, profile_id: int, _params: dict[str, 
     ]
 
 
+async def _rights(_session: AsyncSession, _profile_id: int, params: dict[str, Any]) -> Any:
+    """Les règles de docs/droits, avec leur source ; jamais un chiffre du compte (I-1, §72t)."""
+    subject = params.get("sujet")
+    if subject not in ("general", *TOPICS):
+        raise ToolInputError("sujet inconnu")
+    rules = regles.load()
+    found: list[dict[str, str]] = [
+        {"regle": row["Règle"], "source": row["Source"]}
+        for row in rules.section("paramètres").tables[0]
+    ]
+    for key in TOPICS:
+        section = rules.section(key)
+        found.append(
+            {
+                "regle": f"{section.get('Titre')} : {section.get('Phrase')}",
+                "source": section.get("Phrase source"),
+            }
+        )
+        found += [
+            {
+                "regle": f"{section.get('Titre')} : {line.title}. {line.detail}.",
+                "source": line.source,
+            }
+            for line in rules.lines(key)
+        ]
+    found += [
+        {"regle": row["Règle"], "source": row["Source"]}
+        for row in rules.section("assistant").tables[0]
+    ]
+    ages = {"moins_25": "moins de 25 ans", "25_54": "25 à 54 ans", "55_plus": "55 ans et plus"}
+    children = {"oui": ", enfants à charge", "non": ", sans enfant à charge", "*": ""}
+    found += [
+        {
+            "regle": f"{ages[row['Âge']]}{children[row['Enfants']]}, "
+            f"{row['Mois cotisés'].replace('_', ' à ')} mois cotisés : {row['Indemnités']} "
+            "indemnités au plus",
+            "source": row["Source"],
+        }
+        for row in rules.section("indemnités").tables[0]
+    ]
+    return {
+        "sujet": subject,
+        "verifie": rules.section("page").get("Vérifié"),
+        "regles": found,
+        "chiffres_de_la_personne": {f"{{{{{key}}}}}": text for key, text in PLACEHOLDERS.items()},
+        "hors_regles": "règle absente : dis-le et renvoie à la conseillère ou au conseiller ORP",
+    }
+
+
 _TOOLS: dict[str, Tool] = {
     "situation": _situation,
     "offres_a_examiner": _offers_to_review,
@@ -578,6 +650,7 @@ _TOOLS: dict[str, Tool] = {
     "criteres": _criteria,
     "formations": _trainings,
     "document": _document,
+    "droits": _rights,
 }
 
 

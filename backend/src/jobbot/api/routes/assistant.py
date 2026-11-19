@@ -12,6 +12,8 @@ from sqlalchemy import delete, select
 
 from jobbot.assistant import actions, service
 from jobbot.db.models import ChatAction, ChatConversation, ChatMessage
+from jobbot.droits import regles as droits_rules
+from jobbot.droits import service as droits
 from jobbot.profiles import service as profiles
 from jobbot.runtime import Runtime
 
@@ -34,11 +36,22 @@ class ConversationOut(BaseModel):
     updated_at: datetime
 
 
+class RightsLinkOut(BaseModel):
+    """Sous une réponse qui a lu docs/droits (§72r) : le lien, l'action, la source."""
+
+    subject: str
+    to: str
+    action: str | None
+    source: str
+    verified: date
+
+
 class ChatMessageOut(BaseModel):
     id: int
     role: str
     content: str
     created_at: datetime
+    droits: RightsLinkOut | None = None
 
 
 class ChatActionOut(BaseModel):
@@ -127,14 +140,28 @@ async def get_conversation(request: Request, conversation_id: int) -> Conversati
             .where(ChatAction.conversation_id == conversation_id)
             .order_by(ChatAction.id)
         )
+        # Les chiffres de Tes droits sont mis à l'affichage, jamais gardés dans la réponse (§72t).
+        rules = droits_rules.load()
+        filled = droits.values(droits.figures(rules, await droits.load(session)))
+        messages = []
+        for m in rows:
+            content, subject = (
+                droits.split(m.content) if m.role == "assistant" else (m.content, None)
+            )
+            messages.append(
+                ChatMessageOut(
+                    id=m.id,
+                    role=m.role,
+                    content=droits.fill(content, filled) if m.role == "assistant" else content,
+                    created_at=m.created_at,
+                    droits=RightsLinkOut(**droits.link(rules, subject)) if subject else None,
+                )
+            )
         return ConversationDetail(
             id=conversation.id,
             title=conversation.title,
             updated_at=conversation.updated_at,
-            messages=[
-                ChatMessageOut(id=m.id, role=m.role, content=m.content, created_at=m.created_at)
-                for m in rows
-            ],
+            messages=messages,
             actions=[_action_out(a) for a in proposals],
         )
 

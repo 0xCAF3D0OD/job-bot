@@ -468,3 +468,69 @@ def test_guide_follows_the_pages() -> None:
     assert "assistant-v20" not in service.INSTRUCTIONS
     assert "« Jour de repos »" in service.INSTRUCTIONS
     assert "sans recherche" not in service.INSTRUCTIONS
+
+
+async def test_rights_answer_never_sends_the_figures(
+    client: AsyncClient, runtime: Runtime, monkeypatch: pytest.MonkeyPatch, llm: None
+) -> None:
+    """Tes droits (§72r, §72t) : l'IA lit les règles de docs/droits, jamais la situation du compte ;
+    elle écrit {{clé}}, le chiffre est mis à l'affichage, avec le lien, l'action et la source."""
+    from jobbot.droits import service as droits
+
+    await reset(runtime)
+    async with runtime.sessionmaker.begin() as session:
+        await droits.save(
+            session, droits.Situation(age="25_54", mois="18_21", touchees=125, vacances_prises=0)
+        )
+    fake = FakeChat(
+        [
+            turn(
+                [
+                    {
+                        "type": "tool_use",
+                        "id": "d1",
+                        "name": "droits",
+                        "input": {"sujet": "vacances"},
+                    }
+                ],
+                "tool_use",
+            ),
+            turn(
+                [
+                    {
+                        "type": "text",
+                        "text": "Oui. Tu as {{ vacances }}. Annonce-les 14 jours avant.",
+                    }
+                ],
+                "end_turn",
+            ),
+        ]
+    )
+    monkeypatch.setattr(service, "make_chat_client", lambda _settings: fake)
+    try:
+        response = await client.post("/api/assistant/messages", json={"text": "Mes vacances ?"})
+        found = events(response.text)
+        shown = "".join(data["text"] for kind, data in found if kind == "text")
+        assert shown == "Oui. Tu as 10 jours disponibles. Annonce-les 14 jours avant."
+        link = next(data for kind, data in found if kind == "droits")
+        assert link["to"] == "/compte/droits/vacances"
+        assert link["action"] == "Annoncer mes vacances"
+        assert link["source"] == "Selon la LACI et travail.swiss"
+        # Rien de la situation ne part à l'IA (I-1) : ni dans la question, ni dans les règles lues.
+        sent = json.dumps([call["messages"] for call in fake.calls], ensure_ascii=False)
+        assert "10 jours" not in sent and "125" not in sent
+        rules = json.loads(fake.calls[1]["messages"][-1]["content"][0]["content"])
+        assert any("14 jours avant" in rule["regle"] for rule in rules["regles"])
+        # Gardé avec la clé, rendu avec le chiffre du moment et le lien.
+        detail = (await client.get(f"/api/assistant/conversations/{found[0][1]['id']}")).json()
+        answer = detail["messages"][1]
+        assert answer["content"] == shown and answer["droits"]["subject"] == "vacances"
+        async with runtime.sessionmaker() as session:
+            stored = await session.scalar(
+                select(ChatMessage.content).where(ChatMessage.role == "assistant")
+            )
+        assert stored is not None and "{{ vacances }}" in stored and "10 jours" not in stored
+    finally:
+        await reset(runtime)
+        async with admin_engine().begin() as conn:
+            await conn.execute(text("DELETE FROM settings WHERE key = 'droits_situation'"))

@@ -2833,6 +2833,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/droits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Droits */
+        get: operations["getDroits"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/droits/situation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Situation */
+        get: operations["getDroitsSituation"];
+        /**
+         * Save Situation
+         * @description Ta situation, gardée dans ton compte, jamais envoyée à l'IA (§72t). Champ vide : retiré.
+         */
+        put: operations["saveDroitsSituation"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/certificates": {
         parameters: {
             query?: never;
@@ -4999,6 +5037,7 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            droits?: components["schemas"]["RightsLinkOut"] | null;
         };
         /** CheckoutIn */
         CheckoutIn: {
@@ -5748,6 +5787,49 @@ export interface components {
             /** Excerpt */
             excerpt?: string | null;
         };
+        /** DroitsOut */
+        DroitsOut: {
+            /** Source Label */
+            source_label: string;
+            /**
+             * Verified
+             * Format: date
+             */
+            verified: string;
+            /** Texts */
+            texts: {
+                [key: string]: string;
+            };
+            figures: components["schemas"]["FiguresOut"];
+            /** Situation Complete */
+            situation_complete: boolean;
+            /** Topics */
+            topics: components["schemas"]["TopicOut"][];
+            duties: components["schemas"]["DutiesOut"];
+            /** Sources */
+            sources: components["schemas"]["SourceOut"][];
+        };
+        /** DutiesOut */
+        DutiesOut: {
+            /** Searches Title */
+            searches_title: string;
+            /** Searches Phrase */
+            searches_phrase: string;
+            /** Searches Count */
+            searches_count: number;
+            /** Searches Target */
+            searches_target: number | null;
+            /** Month */
+            month: string;
+            /** Meeting Title */
+            meeting_title: string;
+            /** Meeting At */
+            meeting_at: string | null;
+            /** Holidays Title */
+            holidays_title: string;
+            /** Holidays Phrase */
+            holidays_phrase: string;
+        };
         /** EmployerOut */
         EmployerOut: {
             /** Address */
@@ -5829,6 +5911,23 @@ export interface components {
             letter: components["schemas"]["LetterOut"];
             /** Claim Id */
             claim_id: number;
+        };
+        /** FiguresOut */
+        FiguresOut: {
+            /** Total */
+            total: number | null;
+            /** Restants */
+            restants: number | null;
+            /** Taux */
+            taux: number | null;
+            /** Fin */
+            fin: string | null;
+            /** Vacances Acquis */
+            vacances_acquis: number | null;
+            /** Vacances Disponibles */
+            vacances_disponibles: number | null;
+            /** Avs */
+            avs: boolean;
         };
         /** FillIdentity */
         FillIdentity: {
@@ -6934,6 +7033,15 @@ export interface components {
              * @enum {string}
              */
             modele: "sobre" | "moderne" | "bandeau" | "classique";
+        };
+        /** LineOut */
+        LineOut: {
+            /** Title */
+            title: string;
+            /** Detail */
+            detail: string;
+            /** Source */
+            source: string;
         };
         /**
          * LinkCreated
@@ -8500,6 +8608,25 @@ export interface components {
             /** Pause Until */
             pause_until?: string | null;
         };
+        /**
+         * RightsLinkOut
+         * @description Sous une réponse qui a lu docs/droits (§72r) : le lien, l'action, la source.
+         */
+        RightsLinkOut: {
+            /** Subject */
+            subject: string;
+            /** To */
+            to: string;
+            /** Action */
+            action: string | null;
+            /** Source */
+            source: string;
+            /**
+             * Verified
+             * Format: date
+             */
+            verified: string;
+        };
         /** ScoreNowOut */
         ScoreNowOut: {
             /** Score */
@@ -9154,6 +9281,32 @@ export interface components {
             /** Note */
             note: string;
         };
+        /** SituationIO */
+        SituationIO: {
+            /** Inscription */
+            inscription?: string | null;
+            /** Mois */
+            mois?: ("12_17" | "18_21" | "22_24") | null;
+            /** Age */
+            age?: ("moins_25" | "25_54" | "55_plus") | null;
+            /** Enfants */
+            enfants?: boolean | null;
+            /** Gain */
+            gain?: number | null;
+            /** Touchees */
+            touchees?: number | null;
+            /** Vacances Prises */
+            vacances_prises?: number | null;
+        };
+        /** SourceOut */
+        SourceOut: {
+            /** Key */
+            key: string;
+            /** Name */
+            name: string;
+            /** Url */
+            url: string;
+        };
         /** SpontaneousIn */
         SpontaneousIn: {
             /** Company */
@@ -9363,6 +9516,34 @@ export interface components {
             created_at: string;
             /** Last Used At */
             last_used_at: string | null;
+        };
+        /** TopicOut */
+        TopicOut: {
+            /** Key */
+            key: string;
+            /** Title */
+            title: string;
+            /** Phrase */
+            phrase: string;
+            /** Keyword */
+            keyword: string;
+            /** Keyword Sub */
+            keyword_sub: string;
+            /** Keyword Missing */
+            keyword_missing?: string | null;
+            /** Keyword Sub Missing */
+            keyword_sub_missing?: string | null;
+            /** Source Label */
+            source_label: string;
+            /**
+             * Verified
+             * Format: date
+             */
+            verified: string;
+            /** Action */
+            action: string;
+            /** Lines */
+            lines: components["schemas"]["LineOut"][];
         };
         /** TrainingMarkIn */
         TrainingMarkIn: {
@@ -15774,6 +15955,79 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    getDroits: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DroitsOut"];
+                };
+            };
+        };
+    };
+    getDroitsSituation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SituationIO"];
+                };
+            };
+        };
+    };
+    saveDroitsSituation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SituationIO"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SituationIO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };

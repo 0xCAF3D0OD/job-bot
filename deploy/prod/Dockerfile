@@ -26,6 +26,8 @@ WORKDIR /app
 COPY backend/pyproject.toml backend/uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project
 COPY backend/ ./
+# Les règles de « Tes droits » (§72r), lues par le serveur : le seul fichier juridique.
+COPY docs/droits/ ./docs/droits/
 RUN uv sync --frozen --no-dev
 # La remise à neuf de nuit de la démo, qui tourne sur le même serveur avec cette image.
 COPY deploy/demo/nightly.py /app/nightly.py

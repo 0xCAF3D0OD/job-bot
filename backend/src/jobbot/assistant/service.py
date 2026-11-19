@@ -18,6 +18,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from jobbot import plans
 from jobbot.assistant import actions, tools
 from jobbot.db.models import Application, ChatConversation, ChatMessage, Document, Offer
+from jobbot.droits import regles as droits_rules
+from jobbot.droits import service as droits
 from jobbot.llm.client import ChatTurn, chat_client_factory
 from jobbot.log import get_logger
 from jobbot.runtime import Runtime
@@ -34,7 +36,7 @@ KEEP = timedelta(days=30)
 # Estimation prudente d'un tour (question + données lues), pour respecter le plafond.
 ESTIMATE_USD = Decimal("0.02")
 TITLE_LENGTH = 60
-INSTRUCTIONS = resources.files("jobbot.llm").joinpath("prompts/assistant-v22.md").read_text("utf-8")
+INSTRUCTIONS = resources.files("jobbot.llm").joinpath("prompts/assistant-v23.md").read_text("utf-8")
 
 # Remplaçable en test par un faux client.
 make_chat_client = chat_client_factory
@@ -127,7 +129,11 @@ async def history(session: AsyncSession, conversation_id: int) -> list[ChatMessa
 def _api_messages(rows: list[ChatMessage]) -> list[dict[str, Any]]:
     messages: list[dict[str, Any]] = []
     for row in rows:
-        content = _user_text(row.content, row.page) if row.role == "user" else row.content
+        content = (
+            _user_text(row.content, row.page)
+            if row.role == "user"
+            else droits.split(row.content)[0]
+        )
         if messages and messages[-1]["role"] == row.role:
             # Deux répliques de suite du même côté (réponse interrompue) : on les joint.
             messages[-1]["content"] += "\n\n" + content
@@ -201,7 +207,12 @@ async def answer(
         await session.flush()
         conversation_id = conversation.id
         messages = _api_messages(await history(session, conversation.id))
+        # Tes droits (§72r) : l'IA écrit {{clé}}, le chiffre n'est mis qu'ici, à l'affichage.
+        filler = droits.Filler(
+            droits.values(droits.figures(droits_rules.load(), await droits.load(session)))
+        )
     yield Event("conversation", {"id": conversation_id, "title": conversation.title})
+    subject: str | None = None
 
     client = make_chat_client(settings)
     proposed = 0
@@ -215,7 +226,8 @@ async def answer(
                     turn = item
                 else:
                     written.append(item)
-                    yield Event("text", {"text": item})
+                    if shown := filler.feed(item):
+                        yield Event("text", {"text": shown})
         except anthropic.APIStatusError as exc:
             problem = account_problem(exc) or "l'IA ne répond pas, réessaie dans un moment"
             log.warning("assistant_api_error", status=exc.status_code)
@@ -250,12 +262,14 @@ async def answer(
                         output, error = await tools.run(
                             session, profile_id, name, block.get("input")
                         )
+                        if name == "droits" and not error:
+                            subject = str((block.get("input") or {}).get("sujet"))
                     result = {"type": "tool_result", "tool_use_id": block["id"], "content": output}
                     results.append(result | {"is_error": True} if error else result)
             messages.append({"role": "user", "content": results})
             if written and not written[-1].endswith("\n"):
                 written.append("\n\n")
-                yield Event("text", {"text": "\n\n"})
+                yield Event("text", {"text": filler.feed("\n\n")})
             continue
         if stop == "pause_turn":
             messages.append({"role": "assistant", "content": turn.content})
@@ -265,12 +279,19 @@ async def answer(
         elif stop == "max_tokens":
             note = "\n\n(réponse coupée : trop longue)"
             written.append(note)
-            yield Event("text", {"text": note})
+            yield Event("text", {"text": filler.feed(note)})
         break
     else:
         problem = "trop de données consultées pour une seule question, précise ta demande"
 
+    if rest := filler.flush():
+        yield Event("text", {"text": rest})
     reply = "".join(written).strip()
+    if subject and reply:
+        # Le lien « Voir dans Tes droits », l'action et la source, gardés avec la réponse (§72r).
+        link = droits.link(droits_rules.load(), subject)
+        yield Event("droits", link)
+        reply += droits.mark(subject)
     async with runtime.sessionmaker.begin() as session:
         if reply:
             session.add(
