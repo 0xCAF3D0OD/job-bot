@@ -12,19 +12,20 @@ import AlertsPanel from "../components/AlertsPanel.vue";
 import AlertsWizard from "../components/AlertsWizard.vue";
 import AppIcon from "../components/AppIcon.vue";
 import AppToast from "../components/AppToast.vue";
-import FaceTransform from "../components/FaceTransform.vue";
 import FirstOffers from "../components/FirstOffers.vue";
 import FormField from "../components/FormField.vue";
 import LoadingBlocks from "../components/LoadingBlocks.vue";
 import ReceivedAlerts from "../components/ReceivedAlerts.vue";
 import SidePanel from "../components/SidePanel.vue";
 import SiteMail from "../components/SiteMail.vue";
+import TroupeScene from "../components/TroupeScene.vue";
 import { useJobsMemory } from "../composables/useJobsMemory";
 import { usePageReady } from "../composables/usePageTransition";
 import { usePhone } from "../composables/usePhone";
 import { offerUndo } from "../composables/useUndo";
 import { dateInSentence } from "../dates";
 import { plural } from "../format";
+import { HOME_SCENE } from "../troupe";
 
 // Onglet Alertes (planche « 6. Alertes », 1.6.70, structure inspirée des pages des CFF) : la
 // conclusion, une seule bande d'action (§3), puis « Mes recherches » (une carte par recherche, une
@@ -346,23 +347,40 @@ onMounted(async () => {
         </button>
       </div>
       <template v-if="view === 'wizard'">
-        <!-- Rien en place, la liste est vide (docs/141 §3, Alertes) : sur téléphone, le logo transformé « cloche »
-             au-dessus de l’assistant ; sur ordinateur, Orange est dans l’en-tête (corrections du 13.11, §2). -->
+        <!-- Téléphone, aucune alerte (planche AlertesVide du §72c, Kevin 18.11) : la scène de l’Accueil, le titre, une
+             phrase, « Créer une alerte » qui ouvre la création des premiers pas (OnboardingAlerteDebut), puis la pastille.
+             Sur ordinateur, Orange est dans l’en-tête (corrections du 13.11, §2). -->
         <div
           v-if="phone && nothingYet && !focus"
-          class="face-state alerts-empty"
+          class="alerts-vide"
           data-test="alerts-empty"
         >
-          <FaceTransform
-            kind="alerts"
-            :size="96"
+          <TroupeScene
+            :scene="HOME_SCENE"
+            :height="150"
           />
-          <h2 class="face-state-title">
-            Aucune alerte pour l’instant
+          <h2 class="alerts-vide-title">
+            Pas encore d’alerte
           </h2>
-          <p class="face-state-line">
-            Trois étapes pour recevoir les nouvelles offres ici.
+          <p class="alerts-vide-line">
+            Une alerte sur jobup, et les nouvelles offres arrivent toutes seules.
           </p>
+          <RouterLink
+            class="alerts-vide-go"
+            :to="{ path: '/bienvenue', query: { etape: 'alerte', retour: 'alertes' } }"
+            data-test="alerts-empty-create"
+          >
+            Créer une alerte<svg
+              class="icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            ><path d="m6 6 6 6-6 6M13 6l6 6-6 6" /></svg>
+          </RouterLink>
+          <span class="alerts-vide-pill">Environ 2 minutes</span>
         </div>
         <button
           v-if="focus"
@@ -381,7 +399,7 @@ onMounted(async () => {
           @edit="editing = true"
         />
         <AlertsWizard
-          v-else
+          v-else-if="!(phone && nothingYet && !focus)"
           :page="page"
           :focus="focus"
           :desk="!phone"
@@ -543,6 +561,14 @@ onMounted(async () => {
 /* La pastille « Aucune alerte pour l’instant » (AlertesOrdinateurVide du 17.11) : 14/20 600, cloche de 16 px. */
 .alerts-head-wide .alerts-empty-pill { gap: calc(var(--space-1) * 1.5); margin-top: calc(var(--space-5) / 2); padding: calc(var(--space-1) * 1.5) var(--space-3); font-size: var(--font-small); line-height: var(--space-5); color: var(--primary-text); }
 .alerts-empty-pill .icon { width: 16px; height: 16px; }
+/* AlertesVide (§72c) : valeurs du HTML de la planche ; 40 px au-dessus de la scène et 28 px sur les côtés depuis le bord. */
+.alerts-vide { --vide-24: 24px; --vide-26: 26px; --vide-28: 28px; --vide-30: 30px; --vide-56: 56px; --vide-17: 17px; --vide-13: 0.8125rem; --vide-10: 10px; --vide-14: 14px; --vide-5: 5px; display: flex; flex-direction: column; align-items: center; text-align: center; padding: var(--vide-28) var(--space-2) var(--space-6); }
+.alerts-vide-title { margin: var(--vide-28) 0 0; font-size: var(--vide-24); line-height: var(--vide-30); font-weight: var(--weight-heavy); }
+.alerts-vide-line { margin: var(--vide-10) 0 0; font-size: var(--font-body); line-height: var(--vide-24); color: var(--text-lead); }
+.alerts-vide-go { display: flex; align-items: center; justify-content: space-between; align-self: stretch; height: var(--vide-56); margin-top: var(--vide-28); padding: 0 var(--vide-24); border-radius: var(--radius-pill); background: var(--text); color: var(--on-action); font-size: var(--vide-17); font-weight: var(--weight-bold); text-decoration: none; }
+.alerts-vide-go:hover { color: var(--on-action); }
+.alerts-vide-go .icon { width: 22px; height: 22px; stroke-width: 2.4; }
+.alerts-vide-pill { display: inline-flex; margin-top: var(--vide-14); padding: var(--vide-5) var(--space-3); border-radius: var(--radius-pill); background: var(--line-soft); color: var(--text-lead); font-size: var(--vide-13); font-weight: var(--weight-semibold); }
 .alerts-head-empty > button { margin-left: auto; }
 .alerts-banner-text strong { font-size: var(--font-body); }
 .alerts-phone .alerts-tonal { grid-column: 1 / -1; justify-self: start; }

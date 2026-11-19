@@ -179,7 +179,7 @@ function nextQuestion(): void {
 }
 function back(): void {
   if (fromToday && step.value === 3) {
-    void router.replace("/aujourdhui");
+    void router.replace(backTo);
     return;
   }
   if (step.value === 2 && question.value > 1) {
@@ -211,6 +211,8 @@ const alerts = ref<AlertsPage | null>(null);
 const alertBusy = ref(false);
 // Rouverte depuis la carte Premiers pas d'Aujourd'hui : « Retour », « Plus tard » et « J'ai créé l'alerte » y ramènent.
 const fromToday = route?.query.etape === "alerte";
+// Ouverte depuis « Créer une alerte » de la page Alertes vide (AlertesVide, §72c) : les mêmes boutons ramènent aux Alertes.
+const backTo = route?.query.retour === "alertes" ? "/candidatures/alertes" : "/aujourdhui";
 const alertSearch = computed(() => alerts.value?.searches.find((s) => s.active) ?? null);
 const alertUrl = computed(() => alertSearch.value?.cells.find((c) => c.site === ALERT_SITE)?.url ?? null);
 const alertLabel = computed(() => (alertSearch.value ? `${alertSearch.value.terms} · ${alertSearch.value.location || "Toute la Suisse"}` : ""));
@@ -541,7 +543,7 @@ async function alertDone(): Promise<void> {
 }
 async function afterAlert(): Promise<void> {
   if (fromToday) {
-    await router.replace("/aujourdhui");
+    await router.replace(backTo);
     return;
   }
   step.value = 4;
@@ -955,7 +957,7 @@ async function finish(to: string): Promise<void> {
           <!-- Section 41 du paquet du 16.11 : la phrase sous le titre, puis une carte de 4 étapes ; le code en lecture seule. -->
           <template v-else-if="step === 3">
             <p class="wdk-lead">
-              Pour recevoir les nouvelles offres, tu crées une alerte sur jobup. C’est ainsi que jobA1 reçoit tes offres.
+              Une alerte jobup, et tes offres arrivent toutes seules.
             </p>
             <!-- Section 42 du 16.11 : avec l'extension ou à la main, ordinateur seulement, sur Firefox ou extension détectée ;
                  l’avancée de chaque parcours est gardée quand on change (les deux restent montés). -->
@@ -1004,7 +1006,7 @@ async function finish(to: string): Promise<void> {
                 type="button"
                 class="secondary wdk-back"
                 data-test="welcome-back"
-                @click="fromToday ? router.replace('/aujourdhui') : go(2)"
+                @click="fromToday ? router.replace(backTo) : go(2)"
               >
                 Retour
               </button>
@@ -1369,7 +1371,7 @@ async function finish(to: string): Promise<void> {
 
           <template v-else-if="step === 3">
             <p class="welcome-lead welcome-alert-lead">
-              Pour recevoir les nouvelles offres, crée une alerte sur jobup. C’est ainsi que jobA1 reçoit tes offres. Environ 2 minutes.
+              Une alerte jobup, et tes offres arrivent toutes seules. Environ 2 minutes.
             </p>
             <WelcomeAlertSteps
               v-if="alerts"
@@ -1517,14 +1519,24 @@ async function finish(to: string): Promise<void> {
           v-else-if="step === 3"
           class="welcome-alert-actions"
         >
+          <!-- OnboardingAlerteDebut et OnboardingAlerteCodeRecu (planches_72_a_72k) : bouton noir, comme « Continuer » des
+               questions, avec le double chevron. -->
           <button
             type="button"
-            class="primary welcome-cta"
+            class="welcome-cta welcome-ink"
             :disabled="alertBusy"
             data-test="welcome-alert-done"
             @click="alertDone"
           >
-            {{ codeReceived ? "J’ai validé l’alerte" : "J’ai créé l’alerte" }}
+            {{ codeReceived ? "J’ai validé l’alerte" : "J’ai créé l’alerte" }}<svg
+              class="icon welcome-alert-chevrons"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            ><path d="m6 6 6 6-6 6M13 6l6 6-6 6" /></svg>
           </button>
           <button
             type="button"
@@ -1648,7 +1660,7 @@ async function finish(to: string): Promise<void> {
 .welcome-ready > strong { font-size: var(--font-figure); font-weight: var(--weight-bold); }
 .welcome-ready p { margin: 0; color: var(--text-secondary); }
 .welcome-ready .link { display: inline-flex; align-items: center; min-height: var(--target-min); font-size: var(--font-body); }
-.welcome-actions { position: sticky; bottom: 0; padding-top: var(--space-3); background: inherit; }
+.welcome-actions { position: sticky; bottom: 0; padding-top: var(--space-3); background: var(--bg); }
 .welcome-blue .welcome-actions { background: var(--primary); }
 .welcome-cta { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 58px; padding: 0 var(--space-5) 0 var(--space-6); border-radius: var(--radius-pill); font-size: var(--font-title); font-weight: var(--weight-bold); }
 .welcome-start { border: 0; background: var(--on-primary); color: var(--on-brand-surface); cursor: pointer; }
@@ -1657,6 +1669,8 @@ async function finish(to: string): Promise<void> {
 /* Section 41 : la phrase 22 px de haut en --text-lead, 16 px au-dessus de la carte (l'écart de l'écran). */
 .welcome-alert-lead { font-size: var(--font-label); color: var(--text-lead); }
 .welcome-alert-actions { display: flex; flex-direction: column; }
+/* Le double chevron de la planche OnboardingAlerteDebut : 22 px, trait 2,2. */
+.welcome-alert-chevrons { --welcome-chevrons: 22px; width: var(--welcome-chevrons); height: var(--welcome-chevrons); stroke-width: 2.2; }
 .welcome-alert-later { align-self: center; min-height: var(--target-min); padding: 0 var(--space-4); font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--primary-text); }
 .welcome-sort { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
 .welcome-sort button { justify-content: center; min-height: 58px; border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); }
@@ -1681,7 +1695,8 @@ async function finish(to: string): Promise<void> {
 .wdk-bars span.current { width: var(--wdk-bar-on); }
 .wdk-grid { box-sizing: border-box; display: grid; grid-template-columns: minmax(0, var(--wdk-col)) var(--wdk-scene); column-gap: var(--wdk-gap); justify-content: space-between; width: min(var(--wdk-w), 100% - 2 * var(--space-6)); margin: 0 auto; padding-top: var(--wdk-40); }
 .wdk-col { display: flex; flex-direction: column; min-width: 0; }
-.wdk-cap { margin: 0; font-size: var(--wdk-13); line-height: var(--wdk-16); font-weight: var(--weight-bold); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-secondary); }
+/* Le surtitre des planches OnboardingOrdinateur* (.cap, planches_72_a_72k) : 15/16, gras, à l’encre, sans capitales. */
+.wdk-cap { --wdk-15: 15px; margin: 0; font-size: var(--wdk-15); line-height: var(--wdk-16); font-weight: var(--weight-bold); color: var(--text); }
 .wdk-title { margin: var(--space-3) 0 0; font-size: var(--wdk-40); line-height: var(--wdk-48); font-weight: var(--weight-heavy); letter-spacing: -0.4px; }
 .wdk-title:focus { outline: none; }
 .wdk-title .welcome-hand { margin: 0; font-size: 1.45em; line-height: var(--leading-none); color: var(--primary-graphic); transform: none; animation: none; }

@@ -41,6 +41,8 @@ export const TROUPE_SCREENS: Record<string, string> = {
   // §59 du 17.11 : la scène de l'Accueil, au-dessus du titre sur téléphone, dans le bandeau pêche sur ordinateur.
   "components/HomePhone.vue": "Accueil du téléphone (§59)",
   "views/TodayView.vue": "Aujourd’hui sur ordinateur (§59)",
+  // §72c du 18.11 : AlertesVide, la scène de l’Accueil à 150 px sur téléphone quand aucune alerte n’existe.
+  "views/AlertsView.vue": "Alertes sans alerte sur téléphone (§72c)",
 };
 
 // Les écrans où l'image et un autre des trois sont dans des branches qui s'excluent : le fichier
