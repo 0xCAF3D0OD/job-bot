@@ -918,7 +918,6 @@ onMounted(() => void load());
        ligne (logo, poste, « Entreprise · Lieu », l’anneau sans chiffre, D3) et les étapes. -->
   <PageHero
     v-else-if="phone"
-    v-show="!phoneWriting"
     class="prep-head"
     :title="notFound ? 'Offre introuvable' : 'Ma candidature'"
   >
@@ -1991,7 +1990,7 @@ onMounted(() => void load());
         <!-- La barre du bas du téléphone (C6) : un seul bouton plein, la prochaine chose à faire. Une langue
              choisie ou une consigne écrite le change en « Rédiger… » (C3) : rien ne part sans cet appui. -->
         <ActionBar
-          v-if="phone && !phoneWriting"
+          v-if="phone"
           class="prep-bar"
         >
           <InlineConfirm
@@ -2238,7 +2237,9 @@ onMounted(() => void load());
 .prep-desk .side-card > h2 { font-size: var(--font-title); font-weight: var(--weight-bold); }
 /* Planche ChargementLettre (Kevin, 19.11) : pendant l’écriture, plus de carte, tout sur le fond de la page. */
 .doc-card.doc-card-writing { padding: 0; background: none; border: 0; }
-/* L’écran entier, comme la planche : centré, à 36 px des bords. */
+/* L’écran entier, comme la planche : centré, à 36 px des bords, sans la tête de page ni la barre du bas (en CSS
+   pour ne pas alourdir la page). */
+:root:has(.doc-card-writing) :is(.prep-head, .prep-bar) { display: none; }
 .doc-card-writing .ai-writing-letter { position: fixed; inset: 0; z-index: 1; box-sizing: border-box; justify-content: center; padding: 0 calc(var(--space-8) + var(--space-1)); background: var(--bg); }
 .prep-desk .doc-card { position: relative; gap: 0; padding: 0; overflow: hidden; background: var(--surface-muted); }
 .prep-desk .doc-card-head h2 { font-size: var(--font-title); }
