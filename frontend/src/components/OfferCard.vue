@@ -17,7 +17,12 @@ import { displayTitle } from "../offerTitle";
 // provisoire deviennent des puces ; rien d'autre n'entre dans la carte (ni « Préparer », ni « ⋯ », ni ligne
 // « Il te manque » : la fiche les a). La date n'y est que hors du tri « Par date », où le titre du jour la donne.
 // `outside` (Kevin, 16.11) : l'offre renotée gardée en tête alors que sa note sort des filtres.
-const props = defineProps<{ offer: Offer; selected: boolean; showDate?: boolean; outside?: boolean }>();
+// `checked` (§72q, Kevin le 19.11) : en mode sélection, la carte est une case à cocher ; null hors de ce mode.
+const props = withDefaults(defineProps<{ offer: Offer; selected: boolean; showDate?: boolean; outside?: boolean; checked?: boolean | null }>(), {
+  showDate: false,
+  outside: false,
+  checked: null,
+});
 defineEmits<{ select: [] }>();
 const { phone } = usePhone();
 const route = useRoute();
@@ -46,7 +51,7 @@ function known(value: string | null | undefined): string | null {
   const text = value?.trim();
   return text && !UNKNOWN.test(text) ? text : null;
 }
-type Chip = { text: string; tone?: "peach" | "blue" | "warn" | "kept" | "agency"; title?: string };
+type Chip = { text: string; tone?: "peach" | "blue" | "warn" | "kept" | "agency" | "expired"; title?: string };
 const chips = computed<Chip[]>(() => {
   const o = props.offer;
   const out: Chip[] = [];
@@ -72,7 +77,9 @@ const chips = computed<Chip[]>(() => {
   if (o.filter_reasons?.length) out.push({ text: o.filter_reasons[0]!, tone: "warn" });
   else if (doubts?.length)
     out.push({ text: doubts.some((d) => d.kind === "scam") ? "Arnaque possible" : "À vérifier", tone: "warn", title: doubts.map((d) => d.text).join(" ") });
-  else if (o.expired_at && o.status !== "applied") out.push({ text: "Retirée", tone: "warn" });
+  // En mode sélection, la pastille orange « Offre expirée » de la planche CandidaturesSelection (§72q) ; hors de ce
+  // mode, « Retirée » ne change pas.
+  else if (o.expired_at && o.status !== "applied") out.push(props.checked === null ? { text: "Retirée", tone: "warn" } : { text: "Offre expirée", tone: "expired" });
   // Sans profil, aucune offre n'est notée : la puce le dit, au lieu d'un « Pas encore notée » sans fin.
   if (profileEmpty.value && unscored.value && !setAside.value && !noScore.value && !out.length) out.push({ text: "Profil à compléter", tone: "warn", title: "Ajoute ton dernier poste dans Profil pour que jobA1 note les offres." });
   if (!o.description && !o.spontaneous && o.score !== null && o.score !== undefined) out.push({ text: "Provisoire", tone: "peach" });
@@ -124,6 +131,7 @@ watch([chips, phone], () => void fit());
     :logo="offer.has_logo ? `/api/offers/${offer.id}/logo` : null"
     :to="to"
     :selected="selected"
+    :checked="checked"
     :class="['list-card-offer', { expired: offer.expired_at && offer.status !== 'applied' }]"
     data-test="offer"
     @select="$emit('select')"
@@ -204,7 +212,9 @@ watch([chips, phone], () => void fit());
 .list-card-end .score-ring-worded { gap: var(--card-2); }
 /* Du texte : le gris secondaire (6,3:1 sur la carte), jamais --faint, réservé à ce qui n’est pas du texte. */
 .list-card-end .score-pending { font-weight: var(--weight-bold); color: var(--text-secondary); }
-.list-card.expired { opacity: 0.6; }
+.list-card.expired:not(.list-card-check) { opacity: 0.6; }
+/* « Offre expirée » en mode sélection (§72q) : l'orange de la pastille de la fiche (décision du 18.11, orange partout). */
+.list-card-chips > .expired { background: var(--orange-soft); color: var(--orange-text); font-weight: var(--weight-bold); }
 /* §21 du 15 novembre (ordinateur 40 px, téléphone 48 px) : sans note, un cercle vide en pointillés et un tiret. */
 .score-unrated circle { stroke: var(--linked-line); }
 .score-unrated path { stroke: var(--unrated-dash); }
@@ -236,7 +246,7 @@ watch([chips, phone], () => void fit());
   .list-card-offer .list-card-end .score-ring-wrap { justify-items: end; padding: 0; }
   .list-card-offer > .list-card-chips { margin-top: 0; }
   .list-card-offer > .list-card-chips > * { display: inline-flex; align-items: center; gap: var(--space-1); padding: var(--offer-3) var(--space-2); border-radius: var(--offer-r); line-height: normal; }
-  .list-card-offer > .list-card-chips > :not(.peach, .blue, .green, .warn, .kept, .agency) { color: var(--text-lead); }
+  .list-card-offer > .list-card-chips > :not(.peach, .blue, .green, .warn, .kept, .agency, .expired) { color: var(--text-lead); }
   .list-card-offer > .list-card-chips > .more { font-weight: var(--weight-bold); }
 }
 </style>

@@ -9,6 +9,7 @@ import CountBadge from "../components/CountBadge.vue";
 import FolderTabs, { type FolderTab } from "../components/FolderTabs.vue";
 import { plural } from "../format";
 import { usePhone } from "../composables/usePhone";
+import { useOfferSelection } from "../composables/useOfferSelection";
 
 // Rubrique Candidatures (docs/19 §2, docs/83, docs/126 §1 ; docs/139 étape 5a, C1 validé le 2026-11-02) :
 // trois vues, À traiter · Envoyées · Rendez-vous, sur téléphone et sur ordinateur ; « Alertes » devient un
@@ -27,6 +28,8 @@ const nextCollectAt = ref<string | null>(null);
 provide("nextCollectAt", nextCollectAt);
 const { phone } = usePhone();
 const { phone: wide } = usePhone("(min-width: 1024px)");
+// Sélection multiple des offres (§72q) : sur téléphone, le titre laisse la place à « N sélectionnées ».
+const { selecting } = useOfferSelection();
 const tab = computed<JobsTab>(() => (route.meta.tab as JobsTab | undefined) ?? "offres");
 const counts = ref({ offres: 0, suivi: 0, alertes: 0, "rendez-vous": 0 });
 const fresh = ref({ offres: 0, "rendez-vous": 0 });
@@ -108,7 +111,10 @@ onMounted(() => void refresh());
     v-if="!((wide || phone) && tab === 'alertes')"
     :class="['jobs-head', 'jobs-candidatures', 'folder-head', { wide: tab === 'offres' }]"
   >
-    <div class="jobs-title">
+    <div
+      v-if="!(phone && selecting)"
+      class="jobs-title"
+    >
       <h1>Candidatures</h1>
       <!-- Sur téléphone, le lien monte dans l'en-tête, à côté du titre (maquette Candidatures). -->
       <Teleport
