@@ -1532,6 +1532,7 @@ button.link:hover:not(:disabled) { background: none; box-shadow: none; color: va
 }
 .day-dots .dot.en_attente, .suivi-legend .dot.en_attente { background: var(--surface); border: 1.5px solid var(--muted); }
 .day-dots .dot.relancee, .suivi-legend .dot.relancee { background: var(--orange); }
+.day-dots .dot.reponse, .suivi-legend .dot.reponse { background: var(--surface); border: 1.5px solid var(--accent); }
 .day-dots .dot.entretien, .suivi-legend .dot.entretien { background: var(--accent); }
 .day-dots .dot.refus, .suivi-legend .dot.refus { background: var(--muted); }
 .day-dots .dot.sans_reponse, .suivi-legend .dot.sans_reponse { background: var(--faint); }

@@ -43,6 +43,7 @@ def test_result_text() -> None:
     assert result_text("en_attente", None, None) == "en suspens"
     assert result_text("relancee", None, None) == "en suspens"
     assert result_text("sans_reponse", None, None) == "en suspens (sans réponse)"
+    assert result_text("reponse", None, None) == "en suspens (réponse reçue)"
     interview = datetime(2026, 11, 12, 8, 0, tzinfo=UTC)
     assert result_text("entretien", None, interview) == "en suspens (entretien le 12.11)"
     assert result_text("refus", "profil senior", None) == "refus : profil senior"

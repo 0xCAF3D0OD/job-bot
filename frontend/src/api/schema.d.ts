@@ -4539,7 +4539,7 @@ export interface components {
          * ApplicationStatus
          * @enum {string}
          */
-        ApplicationStatus: "en_attente" | "relancee" | "entretien" | "refus" | "engagement" | "sans_reponse";
+        ApplicationStatus: "en_attente" | "relancee" | "reponse" | "entretien" | "refus" | "engagement" | "sans_reponse";
         /** ApplicationUpdate */
         ApplicationUpdate: {
             /**
