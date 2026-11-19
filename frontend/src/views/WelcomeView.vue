@@ -957,7 +957,7 @@ async function finish(to: string): Promise<void> {
           <!-- Section 41 du paquet du 16.11 : la phrase sous le titre, puis une carte de 4 étapes ; le code en lecture seule. -->
           <template v-else-if="step === 3">
             <p class="wdk-lead">
-              Pour recevoir les nouvelles offres, tu crées une alerte sur jobup. C’est ainsi que jobA1 reçoit tes offres.
+              Une alerte jobup, et tes offres arrivent toutes seules.
             </p>
             <!-- Section 42 du 16.11 : avec l'extension ou à la main, ordinateur seulement, sur Firefox ou extension détectée ;
                  l’avancée de chaque parcours est gardée quand on change (les deux restent montés). -->
@@ -1371,7 +1371,7 @@ async function finish(to: string): Promise<void> {
 
           <template v-else-if="step === 3">
             <p class="welcome-lead welcome-alert-lead">
-              Pour recevoir les nouvelles offres, crée une alerte sur jobup. C’est ainsi que jobA1 reçoit tes offres. Environ 2 minutes.
+              Une alerte jobup, et tes offres arrivent toutes seules. Environ 2 minutes.
             </p>
             <WelcomeAlertSteps
               v-if="alerts"
