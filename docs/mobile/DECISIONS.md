@@ -1264,6 +1264,8 @@ Ces textes sont retirés au téléphone et à l'ordinateur, en clair comme en so
 - Sous l'étape « Lettre » en cours : « D'après ton CV et l'annonce ». On n'affiche jamais un texte qu'on ne connaît pas
   encore (« Ton exemple Nagra en avant » de la planche n'est connu qu'une fois la lettre écrite).
 - « CV adapté » n'apparaît que si le CV s'adapte dans le même passage, et n'est coché que lorsque le CV est prêt.
+- 19.11, 13 h 07 : pendant l'écriture, la tête de page (retour, « Ma candidature », l'offre, les onglets) et le bouton
+  « Rédaction… » disparaissent aussi, comme sur la planche ; ils reviennent quand la lettre est prête.
 
 ## Faire le point sur ordinateur (Kevin, 19.11.2026, 12 h 32)
 
@@ -1286,6 +1288,12 @@ D'après la barre de la planche Offre, pour toutes les barres du bas d'action du
   audit-grille le refusait).
 - Plus de lien texte centré sous le bouton principal, ni d'espace vide en dessous.
 - Premier écran : Ma candidature › Postuler (« J'ai déjà postulé » + « Ouvrir l'annonce ↗ »).
+
+## Rendez-vous sur téléphone : les entretiens dans « À noter », le badge compte tout (Kevin, 19.11.2026, 12 h 58)
+
+- Planche RendezVous (+Sombre), §72u du 19.11 : « À noter » contient les rendez-vous ORP passés sans rien de noté et les entretiens passés sans point fait. Tuile orange, pastille « À noter », « Entretien · {entreprise} · {date} » ; toute la carte ouvre la page Faire le point.
+- Le badge de l'onglet Rendez-vous compte tout ce qui est dans « À noter » (ORP et entretiens), même règle sur téléphone et sur ordinateur.
+- Un entretien est à noter s'il a eu lieu un jour passé, depuis 14 jours au plus, et que son point n'est pas fait.
 
 ## Panneau « Adapté pour cette offre » : annuler le Profil, titre d'une expérience (Kevin, 19.11.2026, 12 h 59)
 
