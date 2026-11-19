@@ -18,7 +18,6 @@ import DetailTwoColumns from "./DetailTwoColumns.vue";
 import CopyButton from "./CopyButton.vue";
 import CopyField from "./CopyField.vue";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
-import OfferActionSheet from "./OfferActionSheet.vue";
 import type { CompatPoint, TipAction } from "./OfferCompatSheet.vue";
 import OfferTextNotice from "./OfferTextNotice.vue";
 import ScoreRing from "./ScoreRing.vue";
@@ -41,6 +40,8 @@ import IconButton from "./IconButton.vue";
 // Feuille de la compatibilité, ouverte à la demande : chargée à part, comme dans PreparationView (limite de poids,
 // décision de Kevin du 18.11, 13 h 37).
 const OfferCompatSheet = defineAsyncComponent(() => import("./OfferCompatSheet.vue"));
+// Feuille « ⋯ » du téléphone, ouverte à la demande : chargée à part (décision de Kevin du 18.11, 13 h 37).
+const OfferActionSheet = defineAsyncComponent(() => import("./OfferActionSheet.vue"));
 // `outsideNote` (Kevin, 16.11) : « Nouvelle note : 38. Elle sort de ton filtre « … ». », sous la note, quand l'offre
 // renotée reste dans la liste hors de ses filtres.
 const props = defineProps<{ offer: Offer; chunkTitles?: Record<number, string>; outsideNote?: string | null }>();
@@ -934,8 +935,11 @@ watch(
           class="match-now oc-now"
           data-test="score-now-block"
         >
+          <!-- §72e (Kevin, 18.11) : « Noter maintenant » en ligne lien avec chevron, comme « Voir la compatibilité » :
+               un seul bouton plein par écran ; la pastille dessous
+               (planche OffreNonNotee du §72, Kevin le 18.11 à 21 h 37). -->
           <BusyButton
-            class="match-now-button"
+            class="match-now-link"
             :busy="scoringNow"
             busy-label="Notation en cours"
             data-test="score-now"
@@ -944,6 +948,7 @@ watch(
             <HoverNote :text="scoringNow ? '' : aiNote('Environ 0,01 $.')">
               Noter maintenant
             </HoverNote>
+            <AppIcon name="chevron" />
           </BusyButton>
           <span class="grey-pill">Environ 10 secondes · compte dans ta formule</span>
           <p
@@ -1450,8 +1455,11 @@ watch(
             class="match-now"
             data-test="score-now-block"
           >
+            <!-- §72e (Kevin, 18.11) : « Noter maintenant » en ligne lien avec chevron, comme « Voir la compatibilité » :
+                 un seul bouton plein par écran ; la pastille dessous
+                 (planche OffreNonNotee du §72, Kevin le 18.11 à 21 h 37). -->
             <BusyButton
-              class="match-now-button"
+              class="match-now-link"
               :busy="scoringNow"
               busy-label="Notation en cours"
               data-test="score-now"
@@ -1460,6 +1468,7 @@ watch(
               <HoverNote :text="scoringNow ? '' : aiNote('Environ 0,01 $.')">
                 Noter maintenant
               </HoverNote>
+              <AppIcon name="chevron" />
             </BusyButton>
             <span class="grey-pill">Environ 10 secondes · compte dans ta formule</span>
             <p
@@ -1954,17 +1963,22 @@ watch(
 .match-unrated { flex: none; width: 60px; height: 60px; }
 .match-unrated circle { stroke: var(--linked-line); }
 .match-unrated path { stroke: var(--unrated-dash); }
-.match-now { --now-gap: 10px; --now-top: 14px; display: flex; flex-direction: column; align-items: center; gap: var(--now-gap); margin: var(--space-4) calc(-1 * var(--space-4)) 0; padding: var(--now-top) var(--space-4) 0; border-top: 1px solid var(--line-soft); }
-.match-now-button { width: 100%; height: 52px; min-height: 52px; border: 0; border-radius: var(--radius-pill); background: var(--primary-soft); color: var(--primary-text); font-size: var(--font-body); font-weight: var(--weight-bold); }
+/* « Noter maintenant » (planche OffreNonNotee du §72, Kevin le 18.11) : sous un trait, la ligne lien bleue 15 px grasse,
+   chevron de 20 px à droite, puis la pastille alignée à gauche sur le texte. La planche met 14 + 4 px au-dessus du lien
+   de 44 px et 2 px sous lui ; ici 16 px et un lien de 48 px, même position du texte et de la pastille, sur la grille de 4. */
+.match-now { --now-pad: var(--space-4); --now-top: 16px; --now-row: 48px; --now-chevron: 20px; display: flex; flex-direction: column; align-items: flex-start; margin: var(--space-4) calc(-1 * var(--now-pad)) 0; padding: var(--now-top) var(--now-pad) 0; border-top: 1px solid var(--line-soft); }
+.match-now-link { align-self: stretch; justify-items: stretch; width: 100%; max-width: none; min-height: var(--now-row); margin: 0; padding: 0; border: 0; background: none; color: var(--primary-text); font: inherit; font-size: var(--font-label); font-weight: var(--weight-bold); text-align: left; cursor: pointer; }
+.match-now-link > .busy-label { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.match-now-link .icon { flex: none; width: var(--now-chevron); height: var(--now-chevron); }
+.match-now .field-error { align-self: stretch; margin: var(--space-2) 0 0; }
 .grey-pill { --pill-pad: 5px; --pill-radius: 15px; --pill-size: 13px; display: inline-flex; align-items: center; min-height: 30px; padding: var(--pill-pad) var(--space-3); border-radius: var(--pill-radius); background: var(--line-soft); color: var(--text-lead); font-size: var(--pill-size); font-weight: var(--weight-semibold); text-align: center; }
-.oc-now { margin: var(--space-4) 0 0; padding-left: 0; padding-right: 0; }
+.oc-now { --now-pad: 0px; }
 /* « Offre expirée » (planche OffreExpiree du 18.11) : la pastille orange, le titre 17 px gras 10 px dessous, la
    phrase 15/21 px grise 4 px dessous. */
 .expired-card { --exp-gap: 10px; --exp-title: 17px; --exp-text-gap: 4px; --exp-lh: 21px; --exp-pill-pad: 3px; --exp-pill-radius: 13px; }
 .expired-pill { justify-self: start; display: inline-flex; align-items: center; min-height: 26px; padding: var(--exp-pill-pad) var(--space-3); border-radius: var(--exp-pill-radius); background: var(--orange-soft); color: var(--orange-text); font-size: var(--font-caption); font-weight: var(--weight-bold); }
 .expired-card .expired-title { margin: var(--exp-gap) 0 0; font-size: var(--exp-title); font-weight: var(--weight-bold); }
 .expired-card .expired-text { margin: var(--exp-text-gap) 0 0; color: var(--text-secondary); font-size: var(--font-label); line-height: var(--exp-lh); }
-.match-now .field-error { align-self: stretch; margin: 0; }
 /* L'adresse (planches OffreAdresse du 18.11) : sur deux lignes, la pastille grise 10 px dessous ; « Modifier » ou
    « Ajouter l'adresse » en ligne pleine largeur sous un trait, texte bleu gras 15 px, chevron gris. */
 .address-lines { white-space: pre-line; }
@@ -2068,6 +2082,7 @@ watch(
     border-radius: 0 0 var(--radius-card) var(--radius-card); background: none; color: var(--primary-text); font: inherit; font-size: var(--font-label); font-weight: var(--weight-bold); text-align: left; cursor: pointer;
   }
   .offer-blocks .compat-open > .icon { flex: none; width: var(--ob-24); height: var(--ob-24); }
+  .offer-blocks .match-now { --now-pad: var(--ob-pad); }
   /* Offre provisoire (OffreProvisoire, §17 du 15 novembre) : l'en-tête sans carte, sur le fond : logo de 56 px, 12 px, titre
      28/34, entreprise et lieu 16 px, pastilles à contour (trait de 1 px, rayon 8) ; dans la carte de la note, les points
      tirés de l'extrait (coche de 18 px, 15/20) et « Voir la compatibilité » en bleu comme partout (décision de Kevin du 16.11). « L'entreprise » en section

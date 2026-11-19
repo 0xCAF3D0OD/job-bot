@@ -38,6 +38,7 @@ export const LIMITS = {
   "js-trier": 106_000,
   "js-candidatures": 175_500,
   "js-candidatures-fichier": 175_500,
+  "js-candidatures-menu": 175_500, // la feuille « ⋯ » de la fiche (téléphone), chargée à la demande : la limite de Candidatures
   "js-candidatures-compatibilite": 175_500, // la feuille de la compatibilité, chargée à la demande : la limite de Candidatures
   "js-candidatures-ajout": 175_500, // les formulaires du panneau « Ajouter », chargés à part : la limite de Candidatures
   "js-preparer": 157_400,
@@ -83,6 +84,7 @@ export const LIMITS = {
   "css-trier": 65_000,
   "css-candidatures": 72_500,
   "css-candidatures-fichier": 72_500,
+  "css-candidatures-menu": 72_500, // la feuille « ⋯ » de la fiche (téléphone), chargée à la demande : la limite de Candidatures
   "css-candidatures-compatibilite": 72_500, // la feuille de la compatibilité, chargée à la demande : la limite de Candidatures
   "css-candidatures-ajout": 72_500, // les formulaires du panneau « Ajouter », chargés à part : la limite de Candidatures
   "css-preparer": 70_500,
@@ -147,6 +149,7 @@ export const PAGES = {
   // La feuille de la compatibilité de la fiche, chargée à la demande (décision de Kevin du 18.11, 13 h 37), mesurée
   // avec la page sous les limites de Candidatures.
   "candidatures-compatibilite": ["views/JobsView.vue", "views/OffersView.vue", "components/OfferCompatSheet.vue"],
+  "candidatures-menu": ["views/JobsView.vue", "views/OffersView.vue", "components/OfferActionSheet.vue"],
   // Les formulaires du panneau « Ajouter » (une offre, une candidature spontanée), chargés à part et préchargés dès
   // l'affichage de la page (même règle que la compatibilité), mesurés avec la page sous les limites de Candidatures.
   "candidatures-ajout": ["views/JobsView.vue", "views/OffersView.vue", "components/addForms.ts"],
