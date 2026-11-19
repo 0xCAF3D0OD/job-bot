@@ -823,3 +823,5 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.609 | Le poids de chaque PR ouverte est mesuré de nouveau à chaque fusion sur main, et une PR qui ferait dépasser passe au rouge avant d'être fusionnée | livrée |
 | 1.6.610 | Premiers pas : entrées et sorties douces (étapes en cascade, ancien contenu qui sort avant le nouveau, barre qui glisse, code de jobup case par case), téléphone et ordinateur | livrée |
 | 1.6.611 | Téléphone : Lettre et CV de Ma candidature passent sur la barre du bas commune (BottomBar) ; la page Préparer repasse sous sa limite de poids | livrée |
+| 1.6.612 | Rendez-vous sur téléphone : « À noter » montre aussi les entretiens passés sans point fait, qui ouvrent Faire le point, et le badge de l'onglet compte tout ce qui est à noter, rendez-vous ORP compris (§72u) | livrée |
+| 1.6.613 | Téléphone, écriture de la lettre en écran entier comme ChargementLettre : sans la tête de page ni la barre du bas, qui reviennent avec la lettre | livrée |
