@@ -1701,8 +1701,11 @@ button, .button-link { max-width: 100%; }
 .logo:not(.image) { font-weight: var(--weight-bold); }
   .offers-more-phone span { font-weight: var(--weight-regular); }
   .offers-other-cap { margin: var(--space-6) var(--space-1) var(--space-2); font-size: var(--label-caps); font-weight: var(--weight-heavy); letter-spacing: .06em; text-transform: uppercase; color: var(--text-secondary); }
-  .offers-other { margin: 0 0 var(--space-6); overflow: hidden; background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card); }
-  .offers-other-row { display: flex; align-items: center; gap: var(--space-3); width: 100%; min-height: 64px; margin: 0; padding: var(--space-2) var(--space-4); border: 0; border-radius: 0; background: transparent; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+  /* Liste en carte (Kevin 19.11) : 12 px de marge dans la carte, lignes à 100 % en border-box, padding 12px 4px, sans
+     marge négative ; la flèche, calée à droite de sa zone de 24 px, est à 16 px du bord, comme dans toutes les listes. */
+  .offers-other { margin: 0 0 var(--space-6); padding: 0 var(--space-3); overflow: hidden; background: var(--surface); border: 1.5px solid var(--card-line); border-radius: var(--radius-card); }
+  .offers-other-row { display: flex; align-items: center; gap: var(--space-3); width: 100%; box-sizing: border-box; min-height: 64px; margin: 0; padding: var(--space-3) var(--space-1); border: 0; border-radius: 0; background: transparent; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+  .offers-other-row > .list-chevron { place-items: center end; }
   .offers-other-row + .offers-other-row { border-top: 1px solid var(--row-sep); }
   .offers-other-text { display: grid; flex: 1; min-width: 0; }
   .offers-other-text strong { font-size: var(--font-body); font-weight: var(--weight-bold); }
