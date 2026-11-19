@@ -792,3 +792,5 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.578 | Alertes sur téléphone : sans alerte, l’écran AlertesVide (scène de l’Accueil, « Créer une alerte » qui ouvre la création des premiers pas et y revient) | livrée |
 | 1.6.579 | Alertes : plus de phrase d’aide sous les titres « À confirmer », « Actives » et « À créer » (§72g), la ligne porte déjà l’état | livrée |
 | 1.6.580 | Premiers pas, étape alerte : la phrase devient « Une alerte jobup, et tes offres arrivent toutes seules. » (et « Environ 2 minutes. » sur téléphone, §72g et §72h) | livrée |
+| 1.6.581 | Premiers pas, code jobup reçu sur téléphone : « Copier le code » devient un bouton à contour (§72f) | livrée |
+| 1.6.582 | Premiers pas, alerte sur téléphone : « J’ai créé l’alerte » et « J’ai validé l’alerte » en bouton noir avec le double chevron, et le pied ne laisse plus voir la carte derrière lui | livrée |
