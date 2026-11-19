@@ -228,7 +228,7 @@ function cal(iso: string): { day: number; month: number } {
             <h3 class="rdv-interview-title">
               {{ item.application.job_title || "Poste non indiqué" }}
             </h3>
-            <span class="rdv-ready rdv-peach">À préparer</span>
+            <span class="rdv-ready rdv-grey">Entretien</span>
           </span>
           <span class="rdv-meta rdv-when"><span>{{ upcomingWhen(item, now) }}</span><span v-if="upcomingWhere(item)">&nbsp;· {{ upcomingWhere(item) }}</span></span>
         </div>
@@ -236,7 +236,7 @@ function cal(iso: string): { day: number; month: number } {
         <button
           type="button"
           class="rdv-prepare"
-          :aria-label="upcomingLabel(item, 'À préparer', now)"
+          :aria-label="upcomingLabel(item, 'Entretien', now)"
           :data-test="`rdv-prepare-${item.application.id}`"
           @click="emit('prepare', item.application)"
         />
@@ -425,6 +425,8 @@ function cal(iso: string): { day: number; month: number } {
 }
 .rdv-todo { background: var(--neutral-soft); color: var(--text-secondary); }
 .rdv-peach { background: var(--peach-soft); color: var(--peach-text); }
+/* « Entretien » à venir (planche RendezVous, §72u) : pastille grise. */
+.rdv-grey { background: var(--line-soft); color: var(--text-lead); }
 /* L'heure et le délai ne sont jamais coupés ; seul ce qui suit l'est (§39, Kevin 16.11). */
 .rdv-when { display: flex; min-width: 0; white-space: nowrap; }
 /* Hors du flux (aucun écart de plus dans la carte) : le bouton couvre toute la carte. */
