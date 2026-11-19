@@ -1255,3 +1255,12 @@ Ces textes sont retirés au téléphone et à l'ordinateur, en clair comme en so
 - Mouvement réduit (prefers-reduced-motion) : fondu d'opacité seul, 150 ms, sans déplacement ni cascade (WCAG 2.3.3). Remplace, pour ces entrées et sorties, « tout mouvement s'arrête » de docs/regles-ui-ergonomie.md §6.
 - Ne s'animent pas : le texte tapé, les champs, les listes longues.
 - Ordre de travail : une PR « motion tokens », puis une PR par zone, en commençant par les premiers pas (CV, Ce que tu cherches, Alerte et ses états de code, Trier), téléphone et ordinateur.
+
+## Écriture de la lettre sur téléphone : sous-ligne et étapes vraies (Kevin, 19.11.2026)
+
+- Planche ChargementLettre (+ Sombre) : pas de carte, pas d'en-tête « Lettre de motivation · Moderne · Changer »
+  pendant l'écriture (le modèle se change une fois la lettre prête), tout posé sur le fond de la page à 36 px du bord ;
+  logo, titre manuscrit sur deux lignes, barre, étapes.
+- Sous l'étape « Lettre » en cours : « D'après ton CV et l'annonce ». On n'affiche jamais un texte qu'on ne connaît pas
+  encore (« Ton exemple Nagra en avant » de la planche n'est connu qu'une fois la lettre écrite).
+- « CV adapté » n'apparaît que si le CV s'adapte dans le même passage, et n'est coché que lorsque le CV est prêt.
