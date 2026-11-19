@@ -9346,6 +9346,11 @@ export interface components {
             orp_history: components["schemas"]["MonthResult"][];
             /** Orp Meeting At */
             orp_meeting_at?: string | null;
+            /**
+             * Orp Meetings To Note
+             * @default 0
+             */
+            orp_meetings_to_note: number;
             rhythm?: components["schemas"]["RhythmWeek"] | null;
         };
         /** TokenCreated */

@@ -433,6 +433,22 @@ describe("Rendez-vous sur téléphone", () => {
     expect(wrapper.findComponent({ name: "OrpOutcomeSheet" }).props("meeting")).toMatchObject({ id: 1 });
   });
 
+  it("« À noter » : l’entretien passé sans point, avec les rendez-vous ORP, ouvre Faire le point (§72u)", async () => {
+    const started = { ...MEETING, starts_at: "2026-10-13T08:00:00Z" };
+    const yesterday = new Date(Date.now() - 2 * 24 * 3600 * 1000).toISOString();
+    serve({ meeting: started, preparation: PREP, past: [], target: 10, trainings: [] }, [interview(5, yesterday)]);
+    const { wrapper } = await open();
+    const section = wrapper.get("[data-test=rdv-to-note]");
+    expect(section.get("h2").text()).toContain("2 rendez-vous");
+    const card = wrapper.get("[data-test=rdv-to-note-point-5]");
+    expect(card.text()).toContain("Poste 5");
+    expect(card.text()).toContain("À noter");
+    expect(card.get(".rdv-meta").text()).toMatch(/^Entretien · Entreprise 5 · \d+ \S+$/);
+    expect(card.get("a").attributes("href")).toBe("/entretien/5/faire-le-point");
+    // Du plus ancien au plus récent : l’ORP du 13 octobre d’abord.
+    expect(section.findAll("article")[0]!.text()).toContain("ORP du 13 octobre");
+  });
+
   it("pas encore de candidature : l’état vide, puis le formulaire sur place après le bouton", async () => {
     serve({ meeting: null, preparation: { ...PREP, has_applications: false }, past: [], target: 10, trainings: [] });
     const { wrapper } = await open();

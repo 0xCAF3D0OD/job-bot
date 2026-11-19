@@ -435,3 +435,11 @@ async def test_your_name_on_the_sheet_stays_in_your_account(rt: Runtime) -> None
             await conn.execute(
                 text("DELETE FROM settings WHERE key = ANY(:keys)"), {"keys": list(SHEET_KEYS)}
             )
+
+
+async def test_the_tab_counts_the_meetings_to_note(client: AsyncClient, rt: Runtime) -> None:
+    """Le badge de Rendez-vous (§72u) : les rendez-vous ORP passés sans rien de noté, pas les autres."""
+    await _meeting_at(rt, NOW - timedelta(days=20))
+    await _meeting_at(rt, NOW - timedelta(days=40), outcome_at=NOW - timedelta(days=39))
+    await _meeting_at(rt, NOW + timedelta(days=3))
+    assert (await client.get("/api/today")).json()["orp_meetings_to_note"] == 1
