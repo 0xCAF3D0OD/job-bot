@@ -63,6 +63,8 @@
 .motion-cascade > :nth-child(3) { --motion-i: 2; }
 .motion-cascade > :nth-child(4) { --motion-i: 3; }
 .motion-cascade > :nth-child(n + 5) { --motion-i: 4; }
+/* Ce qui sort ne répond plus : un second clic sur un bouton qui s'en va ne relance pas son action. */
+.motion-leave-active, .motion-step-leave-active, .motion-sheet-leave-active { pointer-events: none; }
 .motion-leave-active { animation: motion-out var(--motion-exit) forwards; }
 .motion-step-leave-active { animation: motion-out var(--motion-step-exit) forwards; }
 .motion-sheet-enter-active { animation: motion-sheet-in var(--motion-sheet) backwards; }
