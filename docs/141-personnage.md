@@ -137,6 +137,7 @@ le personnage à capuche partout, **sauf dans les notifications**. Composant `Tr
 | Candidature envoyée | envoyee | `ApplicationSent.vue` |
 | Objectif ORP atteint, entretien décroché | objectif | `GoalReached.vue`, `MomentScreen.vue` |
 | Premiers pas sur téléphone, aucun rendez-vous ORP prévu | un | `WelcomeView.vue`, `OrpMeetingEmpty.vue` |
+| Alertes sans alerte sur téléphone (AlertesVide, §72c du 18.11) | accueil-orp (150 px) | `AlertsView.vue` |
 
 - Jamais sur un refus, une échéance ORP dépassée, une perte de données ou une erreur grave : la réponse négative
   montre une icône sobre (`MomentScreen` avec `icon`), testé dans `personnage.test.ts`.

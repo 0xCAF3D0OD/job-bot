@@ -1,6 +1,7 @@
 import { flushPromises, mount } from "@vue/test-utils";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ref } from "vue";
+import { createMemoryHistory, createRouter } from "vue-router";
 
 import AlertsView from "./AlertsView.vue";
 
@@ -59,19 +60,18 @@ async function mountView(data: unknown) {
 // Téléphone : le pas à pas reste en pleine page, sans le panneau de l'ordinateur (consigne de Kevin du 13.11 :
 // « Rien ne change sur téléphone »).
 describe("Alertes sur téléphone : le pas à pas inchangé", () => {
-  it("l’étape 2 reste dans la carte de l’assistant, pas de panneau", async () => {
+  it("aucune alerte : AlertesVide (§72c), « Créer une alerte » ouvre la création des premiers pas", async () => {
     const todo = page([search(1, [cell("jobup"), cell("linkedin")])]);
-    PUT.mockResolvedValue({ data: todo });
-    const wrapper = await mountView(todo);
-    await wrapper.find("[data-test=wizard-next]").trigger("click");
+    GET.mockResolvedValue({ data: todo });
+    const router = createRouter({ history: createMemoryHistory(), routes: [{ path: "/:any(.*)*", component: { template: "<div />" } }] });
+    const wrapper = mount(AlertsView, { global: { plugins: [router], stubs: { teleport: true } } });
     await flushPromises();
-    expect(wrapper.find(".alert-site-panel").exists()).toBe(false);
-    expect(wrapper.find("[data-test=alerts-wizard]").text()).toContain("Crée l’alerte sur jobup");
-    expect(wrapper.find("[data-test=wizard-site-count]").text()).toBe("· site 1 sur 2");
-    expect(wrapper.find("[data-test=wizard-skip]").classes()).toContain("secondary");
-    await wrapper.find("[data-test=wizard-site-done]").trigger("click");
-    await flushPromises();
-    expect(wrapper.text()).toContain("Crée l’alerte sur LinkedIn");
+    const empty = wrapper.get("[data-test=alerts-empty]");
+    expect(empty.find("h2").text()).toBe("Pas encore d’alerte");
+    expect(empty.text()).toContain("Environ 2 minutes");
+    expect(empty.get("[data-test=alerts-empty-create]").text()).toBe("Créer une alerte");
+    expect(empty.get("[data-test=alerts-empty-create]").attributes("href")).toBe("/bienvenue?etape=alerte&retour=alertes");
+    expect(wrapper.find("[data-test=alerts-wizard]").exists()).toBe(false);
   });
 
   it("la carte « À créer » ouvre la feuille « Alerte », puis le pas à pas en pleine page", async () => {
