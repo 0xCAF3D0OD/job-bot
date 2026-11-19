@@ -1,1 +1,1 @@
-CV adapté sur ordinateur : « Pourquoi » sous chaque changement quand le serveur la donne, « Annuler » aussi sur Profil, titre « Expérience chez … », libellés et marges de la planche du 18.11
+CV adapté sur ordinateur : « Pourquoi » sous chaque changement quand le serveur la donne, « Annuler » aussi sur Profil, titre « Expérience chez … » ; Préparer allégé (contacts de l'étape Postuler chargés à part, −12 Ko à l'étape CV)

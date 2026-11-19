@@ -7,7 +7,6 @@ import DocPreview from "../components/DocPreview.vue";
 import LayoutSheetLink from "../components/LayoutSheetLink.vue";
 import { DOC_TEMPLATES, pdfHref, useDocTemplate } from "../composables/useDocTemplate";
 import ApplyActions from "../components/ApplyActions.vue";
-import ContactsPanel from "../components/ContactsPanel.vue";
 import LayoutCard from "../components/LayoutCard.vue";
 import PrepCertificates from "../components/PrepCertificates.vue";
 import FormSheet from "../components/FormSheet.vue";
@@ -52,6 +51,9 @@ const GoalReached = defineAsyncComponent(() => import("../components/GoalReached
 const OfferCompatSheet = defineAsyncComponent(() => import("../components/OfferCompatSheet.vue"));
 const FalseClaimSheet = defineAsyncComponent(() => import("../components/FalseClaimSheet.vue"));
 const ProfileCompletionPanel = defineAsyncComponent(() => import("../components/ProfileCompletionPanel.vue"));
+// Les contacts de l'entreprise (étape Postuler, ordinateur) avec leur choix de date : à part, pour que l'étape CV ne les
+// charge pas (les deux ne s'affichent jamais ensemble). Le compte « Contacts · N » arrive quand le bloc est chargé.
+const ContactsPanel = defineAsyncComponent(() => import("../components/ContactsPanel.vue"));
 // L'étape CV se charge à son ouverture (Kevin, 17.11) : préchargée dès qu'on survole ou atteint l'onglet « CV », sinon
 // quand le navigateur est au repos. Si elle tarde plus de 300 ms, les blocs de chargement (LoadingBlocks attend
 // lui-même 300 ms) remplacent l'écran vide.
