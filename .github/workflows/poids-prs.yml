@@ -1,0 +1,51 @@
+# Le poids des pages des PR ouvertes, mesuré de nouveau à chaque changement de main (Kevin, 19.11.2026,
+# docs/decisions/2026-11-19-1336-controle-poids-prs.md). Le job « Interface » d'une PR mesure son poids sur le
+# main du moment où il a tourné ; une PR verte le matin peut dépasser une limite l'après-midi, une fois d'autres PR
+# fusionnées (#928 puis #930, le 19.11 : main rouge, make deploy bloqué). Ici, après chaque fusion, chaque PR ouverte
+# est fusionnée à blanc avec le nouveau main et mesurée avec scripts/poids.mjs (mêmes limites, mêmes tolérances que
+# le job « Interface ») ; le résultat est posé sur le dernier commit de la PR, statut « Poids avec le main actuel ».
+# Une PR qui ferait dépasser main passe au rouge AVANT d'être fusionnée. Aucune limite n'est touchée.
+name: Poids des PR ouvertes
+
+on:
+  push:
+    branches: [main]
+    paths: ["frontend/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+  statuses: write
+
+concurrency:
+  group: poids-prs
+  cancel-in-progress: true
+
+jobs:
+  poids:
+    name: Poids avec le main actuel
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      GH_TOKEN: ${{ github.token }}
+      CONTEXTE: Poids avec le main actuel
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Dépendances
+        working-directory: frontend
+        run: npm ci
+      - name: Mesure de main
+        working-directory: frontend
+        run: |
+          npx vite build --logLevel error
+          node scripts/poids.mjs --dist dist/ --json "$RUNNER_TEMP/main.json" > /dev/null || true
+      - name: Chaque PR ouverte fusionnée avec main
+        run: sh scripts/poids-prs.sh "$RUNNER_TEMP/main.json"

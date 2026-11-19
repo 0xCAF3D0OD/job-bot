@@ -81,7 +81,7 @@ const LEAD_NO_CV =
     </header>
 
     <div :class="desk ? 'wdk-grid' : 'wps-body'">
-      <div :class="desk ? 'wdk-col' : 'wps-col'">
+      <div :class="[desk ? 'wdk-col' : 'wps-col', 'motion-cascade']">
         <p :class="desk ? 'wdk-cap' : 'wps-cap'">
           Ton parcours
         </p>

@@ -7,13 +7,11 @@ import DocPreview from "../components/DocPreview.vue";
 import LayoutSheetLink from "../components/LayoutSheetLink.vue";
 import { DOC_TEMPLATES, pdfHref, useDocTemplate } from "../composables/useDocTemplate";
 import ApplyActions from "../components/ApplyActions.vue";
-import ContactsPanel from "../components/ContactsPanel.vue";
 import LayoutCard from "../components/LayoutCard.vue";
 import PrepCertificates from "../components/PrepCertificates.vue";
 import FormSheet from "../components/FormSheet.vue";
 import PageHero from "../components/PageHero.vue";
-import ActionBar from "../components/ActionBar.vue";
-import BottomBar from "../components/BottomBar.vue";
+import "../components/bottom-bar.css";
 import AiWritingLetter from "../components/AiWritingLetter.vue";
 import AppIcon from "../components/AppIcon.vue";
 import BottomSheet from "../components/BottomSheet.vue";
@@ -52,6 +50,9 @@ const GoalReached = defineAsyncComponent(() => import("../components/GoalReached
 const OfferCompatSheet = defineAsyncComponent(() => import("../components/OfferCompatSheet.vue"));
 const FalseClaimSheet = defineAsyncComponent(() => import("../components/FalseClaimSheet.vue"));
 const ProfileCompletionPanel = defineAsyncComponent(() => import("../components/ProfileCompletionPanel.vue"));
+// Les contacts de l'entreprise (étape Postuler, ordinateur) avec leur choix de date : à part, pour que l'étape CV ne les
+// charge pas (les deux ne s'affichent jamais ensemble). Le compte « Contacts · N » arrive quand le bloc est chargé.
+const ContactsPanel = defineAsyncComponent(() => import("../components/ContactsPanel.vue"));
 // L'étape CV se charge à son ouverture (Kevin, 17.11) : préchargée dès qu'on survole ou atteint l'onglet « CV », sinon
 // quand le navigateur est au repos. Si elle tarde plus de 300 ms, les blocs de chargement (LoadingBlocks attend
 // lui-même 300 ms) remplacent l'écran vide.
@@ -1248,9 +1249,10 @@ onMounted(() => void load());
           </section>
           <!-- La barre du bas (C6, C8) : d'abord le formulaire ; une fois ouvert, « J'ai postulé ». Une ligne, la
                secondaire à contour à gauche (Kevin, 19.11.2026). -->
-          <BottomBar
+          <div
             v-if="phone"
-            class="apply-actions"
+            class="bottom-bar apply-actions"
+            data-test="bottom-bar"
           >
             <ApplyActions
               :link="applyLink"
@@ -1260,7 +1262,7 @@ onMounted(() => void load());
               @open="opened = true"
               @mark="markApplied"
             />
-          </BottomBar>
+          </div>
         </div>
         <aside
           v-if="!phone"
@@ -1987,14 +1989,16 @@ onMounted(() => void load());
             J’ai relu, continuer
           </button>
         </aside>
-        <!-- La barre du bas du téléphone (C6) : un seul bouton plein, la prochaine chose à faire. Une langue
+        <!-- La barre du bas du téléphone (C6), commune (bottom-bar.css) : un seul bouton plein, la prochaine chose à faire. Une langue
              choisie ou une consigne écrite le change en « Rédiger… » (C3) : rien ne part sans cet appui. -->
-        <ActionBar
+        <div
           v-if="phone"
-          class="prep-bar"
+          class="bottom-bar prep-bar"
+          data-test="bottom-bar"
         >
           <InlineConfirm
             v-if="choosingWrite"
+            class="bb-note"
             message="Tu as des modifications non enregistrées dans cette version."
             confirm-label="Enregistrer, puis rédiger"
             alt-label="Rédiger sans enregistrer"
@@ -2007,38 +2011,37 @@ onMounted(() => void load());
           />
           <PlanLimit
             v-if="writeLabel"
+            class="bb-note"
             usage="letter"
           />
           <template v-if="claim">
             <p
-              class="action-bar-note false-claim-chosen"
+              class="bb-note false-claim-chosen"
               data-test="false-claim-chosen"
             >
               « {{ claim.sentence }} »
             </p>
-            <div class="action-bar-row">
-              <button
-                type="button"
-                class="secondary"
-                data-test="false-claim-cancel"
-                @click="clearClaim"
-              >
-                Annuler
-              </button>
-              <button
-                type="button"
-                class="primary"
-                data-test="false-claim-open"
-                @click="claimOpen = true"
-              >
-                Pas vrai
-              </button>
-            </div>
+            <button
+              type="button"
+              class="secondary bb-alt"
+              data-test="false-claim-cancel"
+              @click="clearClaim"
+            >
+              Annuler
+            </button>
+            <button
+              type="button"
+              class="primary bb-main"
+              data-test="false-claim-open"
+              @click="claimOpen = true"
+            >
+              Pas vrai
+            </button>
           </template>
           <button
             v-else-if="noProfile && !selected"
             type="button"
-            class="primary prep-bar-main"
+            class="primary bb-main"
             data-test="no-profile-link"
             @click="completion = 'profile'"
           >
@@ -2046,7 +2049,7 @@ onMounted(() => void load());
           </button>
           <BusyButton
             v-else-if="writeLabel || writing"
-            class="primary prep-bar-main"
+            class="primary bb-main"
             :busy="writing"
             :busy-label="phase === 'review' ? 'Relecture…' : 'Rédaction…'"
             :disabled="reached('letter')"
@@ -2059,14 +2062,14 @@ onMounted(() => void load());
           <button
             v-else-if="selected"
             type="button"
-            class="primary prep-bar-main"
+            class="primary bb-main"
             :disabled="readBusy"
             data-test="next-step"
             @click="readThenNext"
           >
             J’ai relu, continuer
           </button>
-        </ActionBar>
+        </div>
         <BottomSheet
           v-if="selected"
           :open="versionsOpen"
@@ -2512,5 +2515,4 @@ onMounted(() => void load());
 .apl-contact > .icon { flex: none; color: var(--text-secondary); }
 /* « Postuler sur … » en bas sur téléphone (PreparerMiseEnPage du 14.11) : pilule de 52 ; ici plutôt que dans style.css,
    qui est chargé au premier écran. */
-@media (max-width: 820px) { .prep-bar > a.prep-bar-main { min-height: var(--btn-secondary); } }
 </style>

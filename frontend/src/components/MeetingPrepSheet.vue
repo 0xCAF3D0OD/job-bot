@@ -162,12 +162,11 @@ function remove(question: Question): void {
   });
 }
 // « ⋯ › Retirer » une question proposée par jobA1 (Kevin, 18.11, option A) : le serveur la garde comme retirée
-// et ne la propose plus pour ce rendez-vous ; « Annuler » pendant 5 s.
+// et ne la propose plus pour ce rendez-vous ; « Annuler » pendant 6 s, comme tous les bandeaux (Kevin, 19.11).
 function retire(question: Question): void {
   hidden.add(question.key);
   void offerUndo({
     message: "Question retirée",
-    ms: 5000,
     commit: async () => {
       const list = props.questions.map((q) => (q.key === question.key ? { ...q, checked: false, removed: true } : q));
       const ok = props.save ? await props.save(list) : false;

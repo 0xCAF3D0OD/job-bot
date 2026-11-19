@@ -152,13 +152,13 @@ defineExpose({
       />
     </div>
     <Transition
-      name="welcome-step"
+      name="motion-step"
       mode="out-in"
       @after-enter="focusTitle"
     >
       <div
         :key="question"
-        class="wq-screen"
+        class="wq-screen motion-cascade"
         :data-test="`question-${question}`"
       >
         <p
@@ -437,8 +437,9 @@ defineExpose({
   --wq-2: 2px; --wq-3: 3px; --wq-6: 6px; --wq-10: 10px; --wq-13: 13px; --wq-14: 14px; --wq-15: 15px; --wq-16: 16px; --wq-17: 17px; --wq-18: 18px; --wq-20: 20px; --wq-22: 22px; --wq-26: 26px; --wq-32: 32px; --wq-48: 48px;
   display: flex; flex-direction: column; flex: 1; padding: 0 var(--space-1); }
 .wq-bar { display: flex; gap: var(--wq-6); padding-top: var(--wq-6); }
-.wq-bar span { flex: 1; height: 5px; border-radius: var(--wq-3); background: var(--line); transition: background-color 0.4s; }
-.wq-bar span.done { background: var(--primary-graphic); }
+.wq-bar span { position: relative; overflow: hidden; flex: 1; height: 5px; border-radius: var(--wq-3); background: var(--line); }
+.wq-bar span::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--primary-graphic); transform: scaleX(0); transform-origin: left; transition: transform var(--motion-progress); }
+.wq-bar span.done::after { transform: none; }
 .wq-screen { display: flex; flex-direction: column; }
 .wq-count { margin: var(--wq-14) 0 0; font-size: var(--wq-13); font-weight: var(--weight-bold); color: var(--text-secondary); }
 .wq-title { margin: var(--space-2) 0 var(--wq-6); font-size: var(--wq-26); line-height: var(--wq-32); font-weight: var(--weight-heavy); }
@@ -484,5 +485,4 @@ defineExpose({
 .welcome-questions { gap: 0; padding-top: 0; }
 .welcome-cta.welcome-ink { --welcome-ink-size: 17px; padding: 0 var(--space-6); border: 0; background: var(--text); color: var(--bg); font-size: var(--welcome-ink-size); }
 .welcome-guillemet { font-size: var(--title-sub); }
-@media (prefers-reduced-motion: reduce) { .wq-bar span { transition: none; } }
 </style>

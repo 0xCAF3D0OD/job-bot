@@ -148,7 +148,6 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     expect(wrapper.find("[data-test=welcome-back]").exists()).toBe(false);
 
     await click(wrapper, "welcome-start");
-    expect(wrapper.find(".welcome-blue").exists()).toBe(false);
     expect(wrapper.find("[role=progressbar]").attributes("aria-label")).toBe("Étape 2 sur 5");
     expect(calls("/api/welcome")).toContainEqual({ step: 2 });
     expect(wrapper.find("[data-test=welcome-back]").exists()).toBe(true);
@@ -619,6 +618,18 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     await click(wrapper, "welcome-later");
     expect(calls("/api/welcome").at(-1)).toEqual({ postponed: true });
     expect(router.currentRoute.value.path).toBe("/aujourdhui");
+  });
+
+  it("le fond bleu part avec l’entrée de l’étape suivante, jamais sous l’ancien texte (docs/mouvement.md)", async () => {
+    const { wrapper } = await mountWelcome(undefined, { realTransition: true });
+    expect(wrapper.find(".welcome-blue").exists()).toBe(true);
+    await click(wrapper, "welcome-start");
+    await vi.waitFor(async () => {
+      await flushPromises();
+      expect(wrapper.find(".welcome-blue").exists()).toBe(false);
+      expect(wrapper.find("[data-test=welcome-step-2]").exists()).toBe(true);
+    });
+    wrapper.unmount();
   });
 
   it("en changeant d’étape, le focus va au titre de la nouvelle (docs/69 §4)", async () => {
