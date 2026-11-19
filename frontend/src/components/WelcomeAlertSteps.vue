@@ -82,10 +82,10 @@ const marks = computed<Mark[]>(() => {
               :href="url"
               target="_blank"
               rel="noopener noreferrer"
-              class="button-link primary-link wa-open"
+              class="button-link wa-open wa-open-jobup"
               data-test="wizard-open"
               @click="open"
-            ><AppIcon name="external" />Ouvrir jobup avec ma recherche<span class="visually-hidden"> (nouvel onglet)</span></a>
+            ><AppIcon name="external" />Ouvrir jobup<span class="visually-hidden"> (nouvel onglet)</span></a>
             <svg
               v-if="desk"
               class="wa-laptop"
@@ -286,7 +286,12 @@ const marks = computed<Mark[]>(() => {
 .wa-desk .wa-open.button-link { min-height: var(--wa-open-h); padding: var(--wa-open-pad); font-size: var(--font-body); }
 .wa-open .icon { width: 16px; height: 16px; stroke-width: 2.2; }
 /* Téléphone : le bouton prend la largeur de l'étape, son texte passe sur deux lignes (OnboardingAlerteDebut). */
-.wa:not(.wa-desk) .wa-open.button-link { flex: 1; justify-content: center; padding-block: var(--wa-6); white-space: normal; text-align: center; line-height: var(--wa-18); }
+.wa:not(.wa-desk) .wa-open.button-link:not(.wa-open-jobup) { flex: 1; justify-content: center; padding-block: var(--wa-6); white-space: normal; text-align: center; line-height: var(--wa-18); }
+/* §72h (18.11, OnboardingAlerteDebut, OnboardingOrdinateurAlerte et AlerteExt) : « Ouvrir jobup » à contour, 44 px, largeur
+   au contenu, aligné à gauche ; contour 1,5 px --primary-graphic, fond --surface, texte --primary-text. Le seul bouton
+   plein de l'écran reste « J'ai créé l'alerte ». */
+.wa-open.wa-open-jobup { --wa-open-jobup-h: 44px; flex: none; height: var(--wa-open-jobup-h); min-height: var(--wa-open-jobup-h); padding: 0 var(--space-4); border: var(--action-line) solid var(--primary-graphic); background: var(--surface); color: var(--primary-text); font-weight: var(--weight-bold); white-space: nowrap; }
+.wa-desk .wa-open.wa-open-jobup { min-height: var(--wa-open-jobup-h); padding: var(--wa-open-pad); font-size: var(--font-body); }
 .wa-laptop { flex: none; }
 .wa-laptop-screen { fill: var(--surface); stroke: var(--text); }
 .wa-laptop-bar { fill: var(--primary-graphic); }

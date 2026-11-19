@@ -38,7 +38,9 @@ describe("Crée ton alerte sur jobup (section 41 du paquet du 16.11)", () => {
     expect(current(wrapper)).toBe(1);
     const open = wrapper.get("[data-test=wizard-open]");
     expect(open.attributes("target")).toBe("_blank");
-    expect(open.text()).toContain("Ouvrir jobup avec ma recherche");
+    expect(open.text()).toContain("Ouvrir jobup");
+    expect(open.text()).not.toContain("avec ma recherche");
+    expect(open.classes()).not.toContain("primary-link");
     await open.trigger("click");
     expect(current(wrapper)).toBe(3);
     expect(wrapper.find("[data-test=wizard-reopen]").exists()).toBe(true);
