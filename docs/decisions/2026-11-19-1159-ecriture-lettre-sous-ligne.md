@@ -6,3 +6,5 @@
 - Sous l'étape « Lettre » en cours : « D'après ton CV et l'annonce ». On n'affiche jamais un texte qu'on ne connaît pas
   encore (« Ton exemple Nagra en avant » de la planche n'est connu qu'une fois la lettre écrite).
 - « CV adapté » n'apparaît que si le CV s'adapte dans le même passage, et n'est coché que lorsque le CV est prêt.
+- 19.11, 13 h 07 : pendant l'écriture, la tête de page (retour, « Ma candidature », l'offre, les onglets) et le bouton
+  « Rédaction… » disparaissent aussi, comme sur la planche ; ils reviennent quand la lettre est prête.

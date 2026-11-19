@@ -917,6 +917,7 @@ onMounted(() => void load());
        ligne (logo, poste, « Entreprise · Lieu », l’anneau sans chiffre, D3) et les étapes. -->
   <PageHero
     v-else-if="phone"
+    v-show="!phoneWriting"
     class="prep-head"
     :title="notFound ? 'Offre introuvable' : 'Ma candidature'"
   >
@@ -1412,7 +1413,7 @@ onMounted(() => void load());
           >
             <!-- Téléphone (§9) : « Moderne · Français » sous le titre et « Changer », qui ouvre la feuille ; plus de
                  FR / DE / EN sur l’écran. Sur ordinateur, FR / DE / EN reste en haut du document. Pendant l’écriture
-                 (planche ChargementLettre, Kevin 19.11) : ni carte ni en-tête, le modèle se change une fois la lettre
+                 (planche ChargementLettre, Kevin 19.11) : ni carte ni en-tête (ni la tête de page, ni la barre du bas), le modèle se change une fois la lettre
                  prête. -->
             <LayoutSheetLink
               v-if="phone && !phoneWriting"
@@ -1988,7 +1989,7 @@ onMounted(() => void load());
         <!-- La barre du bas du téléphone (C6) : un seul bouton plein, la prochaine chose à faire. Une langue
              choisie ou une consigne écrite le change en « Rédiger… » (C3) : rien ne part sans cet appui. -->
         <ActionBar
-          v-if="phone"
+          v-if="phone && !phoneWriting"
           class="prep-bar"
         >
           <InlineConfirm
@@ -2235,6 +2236,8 @@ onMounted(() => void load());
 .prep-desk .side-card > h2 { font-size: var(--font-title); font-weight: var(--weight-bold); }
 /* Planche ChargementLettre (Kevin, 19.11) : pendant l’écriture, plus de carte, tout sur le fond de la page. */
 .doc-card.doc-card-writing { padding: 0; background: none; border: 0; }
+/* L’écran entier, comme la planche : centré, à 36 px des bords. */
+.doc-card-writing .ai-writing-letter { position: fixed; inset: 0; z-index: 1; box-sizing: border-box; justify-content: center; padding: 0 calc(var(--space-8) + var(--space-1)); background: var(--bg); }
 .prep-desk .doc-card { position: relative; gap: 0; padding: 0; overflow: hidden; background: var(--surface-muted); }
 .prep-desk .doc-card-head h2 { font-size: var(--font-title); }
 .prep-desk .doc-card > :not(.doc-card-head, .doc-search, .doc-hit-box, .letter-sheet, .cv-sheet, .prep-writing, .prep-empty-page) { margin-left: var(--prep-24); margin-right: var(--prep-24); }
