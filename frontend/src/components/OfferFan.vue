@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, nextTick, onMounted, ref, watch } from "vue";
 
 import type { Offer } from "../api/client";
 import { companyPlace, scoreWord, triageTags } from "../format";
@@ -35,6 +35,37 @@ const SPREAD: Record<number, number[]> = { 1: [340], 2: [170, 510], 3: [0, 340, 
 const TONES = ["fan-blue", "fan-orange", "fan-yellow"] as const;
 
 const flipped = ref<number[]>([]);
+
+// La citation du dos (planche TrierOffresOrdinateurV2, état « dos ») : autant de lignes entières que la carte en laisse
+// sous le titre, au-dessus des verdicts et du lien, entre 1 et 5, et « … » à la fin si elle est coupée. Jamais une
+// ligne tranchée à mi-hauteur ni un surlignage hors du bloc (Kevin, 19.11.2026). Les tailles de la carte sont fixes :
+// le calcul se fait une fois, quand le dos s'affiche, et une seconde fois si la police n'était pas encore chargée.
+function fitQuote(el: unknown): void {
+  if (!(el instanceof HTMLElement) || el.dataset.lines) return;
+  const back = el.parentElement;
+  if (!back?.clientHeight) return;
+  const gap = parseFloat(getComputedStyle(back).rowGap) || 0;
+  let room = back.clientHeight - gap * (back.children.length - 1);
+  for (const child of back.children) if (child !== el) room -= (child as HTMLElement).offsetHeight;
+  const quote = getComputedStyle(el);
+  const line = parseFloat(quote.lineHeight);
+  const lines = Math.min(5, Math.max(1, Math.floor((room - parseFloat(quote.paddingTop) - parseFloat(quote.paddingBottom)) / line)));
+  el.style.setProperty("--lines", String(lines));
+  el.dataset.lines = String(lines);
+  if (document.fonts && document.fonts.status !== "loaded") {
+    void document.fonts.ready.then(() => {
+      delete el.dataset.lines;
+      el.style.removeProperty("--lines");
+      fitQuote(el);
+    });
+  }
+}
+const root = ref<HTMLElement | null>(null);
+function fitQuotes(): void {
+  root.value?.querySelectorAll(".fan-quote").forEach(fitQuote);
+}
+watch(flipped, () => void nextTick(fitQuotes));
+onMounted(fitQuotes);
 function flip(id: number): void {
   flipped.value = flipped.value.includes(id) ? flipped.value.filter((f) => f !== id) : [...flipped.value, id];
 }
@@ -89,6 +120,7 @@ const cards = computed(() => {
 
 <template>
   <div
+    ref="root"
     :class="['fan', mini ? 'fan-mini' : 'fan-live']"
     data-test="offer-fan"
   >
@@ -156,13 +188,14 @@ const cards = computed(() => {
           <p
             v-if="card.excerpt"
             class="fan-quote"
+            data-test="fan-quote"
           >
-            «&nbsp;<template
+            <span class="fan-quote-text">«&nbsp;<template
               v-for="(part, i) in card.excerpt.segments"
               :key="i"
             >
               <mark v-if="part.mark">{{ part.text }}</mark><span v-else>{{ part.text }}</span>
-            </template>&nbsp;»
+            </template>&nbsp;»</span>
           </p>
           <ul class="fan-verdicts">
             <li
@@ -261,10 +294,16 @@ const cards = computed(() => {
 .fan-back { display: flex; flex-direction: column; gap: var(--space-4); height: 100%; text-align: left; }
 .fan-back-head { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); margin: 0; font-size: var(--font-body); }
 .fan-back-head span { font-size: var(--font-small); opacity: 0.8; white-space: nowrap; }
-.fan-quote { margin: 0; text-align: center; padding: var(--space-3) var(--space-4); border-radius: var(--fan-14); background: rgb(255 255 255 / 55%); color: var(--on-peach); font-size: var(--font-label); line-height: var(--fan-22); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; }
-.fan-quote mark { padding: 0 var(--space-1); border-radius: var(--radius-sm); background: var(--fan-yellow); color: inherit; }
+/* La citation ne rétrécit pas avec la carte (sinon une ligne est tranchée) : elle garde --lines lignes entières
+   (fitQuote, sur .fan-quote-text), centrée comme sur la planche ; le surlignage, 2 px de chaque côté, reste dans le bloc. */
+.fan-quote { flex: none; margin: 0; text-align: center; padding: var(--space-3) var(--space-4); border-radius: var(--fan-14); background: rgb(255 255 255 / 55%); color: var(--on-peach); font-size: var(--font-label); line-height: var(--fan-22); }
+/* La coupe se fait sur le texte, pas sur le bloc : la marge du bas ne laisse jamais voir le haut de la ligne suivante. */
+.fan-quote-text { display: -webkit-box; -webkit-line-clamp: var(--lines, 5); line-clamp: var(--lines, 5); -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.fan-quote mark { padding: 0 calc(var(--space-1) / 2); border-radius: var(--radius-sm); background: var(--fan-yellow); color: inherit; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
 .fan-verdicts { display: grid; gap: var(--space-3); margin: 0; padding: 0; list-style: none; font-size: var(--font-label); line-height: var(--fan-22); }
 .fan-verdicts li { display: flex; gap: var(--space-3); align-items: flex-start; }
+/* Un verdict très long s'arrête à 3 lignes entières, « … » à la fin : le lien reste dans la carte. */
+.fan-verdicts li > span { display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .fan-verdicts i { flex: none; display: grid; place-items: center; width: 22px; height: 22px; border-radius: var(--radius-pill); background: rgb(0 0 0 / 14%); font-style: normal; font-weight: var(--weight-heavy); font-size: var(--font-caption); }
 .fan-verdicts i.ok { background: var(--fan-ink); color: var(--fan-bg); }
 .fan-verdicts :deep(svg) { width: var(--font-caption); height: var(--font-caption); stroke-width: 3; }

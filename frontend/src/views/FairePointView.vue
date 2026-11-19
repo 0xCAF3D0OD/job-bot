@@ -121,7 +121,7 @@ async function save(): Promise<void> {
         <h2 id="faire-point-feeling">
           Comment ça s’est passé ?
         </h2>
-        <div class="faire-point-card faire-point-pad">
+        <div class="faire-point-nocard">
           <div
             class="faire-point-seg"
             role="radiogroup"
@@ -173,7 +173,7 @@ async function save(): Promise<void> {
           >{{ followUp }}</span>
         </p>
         <h2>Tes notes</h2>
-        <div class="faire-point-card faire-point-pad">
+        <div class="faire-point-nocard">
           <label
             for="faire-point-notes"
             class="faire-point-label"
@@ -223,7 +223,8 @@ async function save(): Promise<void> {
 .faire-point-body { flex: 1; padding-bottom: var(--space-6); }
 .faire-point-body h2 { margin: var(--fp-22) var(--fp-20) var(--fp-10); font-size: var(--fp-18); font-weight: var(--weight-heavy); }
 .faire-point-card { margin: 0 var(--space-4) var(--space-3); background: var(--surface); border: 1px solid var(--line); border-radius: var(--fp-20); overflow: hidden; }
-.faire-point-pad { padding: var(--space-4); }
+/* §72n (19.11) : le ressenti et les notes ne sont plus dans une carte, posés sur le fond à 16 des bords. */
+.faire-point-nocard { margin: 0 var(--space-4); }
 .faire-point-meeting { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-4); }
 .faire-point-date { flex: none; display: flex; flex-direction: column; align-items: center; width: var(--fp-46); height: var(--fp-50); border-radius: var(--fp-10); box-shadow: inset 0 0 0 2px var(--primary-graphic); overflow: hidden; }
 .faire-point-date span { width: 100%; background: var(--primary-graphic); color: var(--surface); font-size: var(--fp-10); font-weight: var(--weight-heavy); line-height: var(--space-4); text-align: center; }
@@ -231,7 +232,7 @@ async function save(): Promise<void> {
 .faire-point-title { margin: 0; font-size: var(--fp-18); font-weight: var(--weight-bold); }
 .faire-point-sub { margin: var(--fp-2) 0 0; font-size: var(--font-small); line-height: var(--fp-19); color: var(--text-secondary); }
 .faire-point-seg { display: flex; gap: var(--space-2); }
-.faire-point-seg button { flex: 1; height: var(--fp-44); border: 0; border-radius: var(--fp-22); background: var(--surface); box-shadow: inset 0 0 0 1.5px var(--card-line); color: var(--text); font-size: var(--fp-15); font-weight: var(--weight-bold); }
+.faire-point-seg button { flex: 1; display: flex; align-items: center; justify-content: center; height: var(--fp-44); border: 0; border-radius: var(--fp-22); background: var(--surface); box-shadow: inset 0 0 0 1.5px var(--card-line); color: var(--text); font-size: var(--fp-15); font-weight: var(--weight-bold); }
 .faire-point-seg button.on { background: var(--primary-soft); color: var(--primary-text); box-shadow: inset 0 0 0 2px var(--primary-graphic); }
 .faire-point-row { display: flex; align-items: center; gap: var(--space-3); width: 100%; min-height: var(--fp-56); padding: var(--fp-10) var(--space-4); border: 0; background: transparent; color: var(--text); font-size: var(--font-body); text-align: left; }
 .faire-point-row + .faire-point-row { border-top: 1px solid var(--line-soft); }
