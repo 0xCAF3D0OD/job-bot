@@ -1,7 +1,8 @@
 import { ref } from "vue";
 
 // Annuler plutôt que confirmer (docs/108 §1) : l'action se voit tout de suite, le serveur ne
-// la reçoit qu'au bout de 6 secondes, sauf « Annuler ». Un bandeau à la fois : le suivant
+// la reçoit qu'au bout de 6 secondes, sauf « Annuler ». Une seule durée pour tous les bandeaux avec « Annuler » de
+// l'app (Kevin, 19.11.2026) : UNDO_MS, sans exception. Un bandeau à la fois : le suivant
 // valide le précédent ; la page qui se ferme l'envoie aussi (keepalive).
 export const UNDO_MS = 6000;
 
@@ -13,8 +14,6 @@ export interface UndoOffer {
   restore: () => Promise<void> | void;
   // « Voir » à côté d'« Annuler » (K5, Kevin le 17.11) : valide l'action, puis mène là où l'élément est parti.
   see?: () => void;
-  // Durée du bandeau quand elle n'est pas de 6 s (« Question retirée » : 5 s, Kevin le 18.11).
-  ms?: number;
 }
 
 const pending = ref<(UndoOffer & { id: number }) | null>(null);
@@ -23,7 +22,7 @@ let seq = 0;
 
 function schedule(): void {
   clearTimeout(timer);
-  timer = setTimeout(() => void flush(), pending.value?.ms ?? UNDO_MS);
+  timer = setTimeout(() => void flush(), UNDO_MS);
 }
 
 async function flush(keepalive = false): Promise<void> {
