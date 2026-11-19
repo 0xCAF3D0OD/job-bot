@@ -434,6 +434,40 @@ describe("OfferDetail sur téléphone, une sous-page (maquette Offre, docs/139 �
     vi.unstubAllGlobals();
   });
 
+  it("« Ouvrir l’annonce sur le site » (§72l) : le site d’origine dans un nouvel onglet", async () => {
+    phone();
+    const open = vi.fn();
+    vi.stubGlobal("open", open);
+    const wrapper = await mountDetail(offer({ description: "Texte." }));
+    await wrapper.find("[data-test=detail-more]").trigger("click");
+    await wrapper.find("[data-test=offer-action-open-ad]").trigger("click");
+    expect(open).toHaveBeenCalledWith("https://ch.indeed.com/viewjob?jk=1", "_blank", "noopener,noreferrer");
+    vi.unstubAllGlobals();
+  });
+
+  it("« Le poste » sur téléphone (option B, 19.11) : déplier, « Masquer l’annonce », plus de lien vers le site", async () => {
+    phone();
+    const wrapper = await mountDetail(
+      offer({ description: "Missions. ".repeat(60), summary_role: "Le rôle.", summary_missions: "Les missions." }),
+    );
+    const post = wrapper.get("[data-test=section-ad]");
+    expect(post.find("[data-test=apply]").exists()).toBe(false);
+    expect(post.text()).not.toContain("Voir l’annonce sur");
+    const more = post.get("[data-test=read-more]");
+    expect(more.text()).toBe("Voir l’annonce complète");
+    expect(more.find("[data-icon=chevron-down]").exists()).toBe(true);
+    expect(more.attributes("aria-expanded")).toBe("false");
+    await more.trigger("click");
+    expect(post.find("[data-test=description]").exists()).toBe(true);
+    const less = post.get("[data-test=read-less]");
+    expect(less.text()).toBe("Masquer l’annonce");
+    expect(less.find("[data-icon=chevron-up]").exists()).toBe(true);
+    await less.trigger("click");
+    expect(post.find("[data-test=read-more]").exists()).toBe(true);
+    expect(post.find("[data-test=read-less]").exists()).toBe(false);
+    vi.unstubAllGlobals();
+  });
+
   it("offre expirée (planche OffreExpiree, 18.11) : la carte, « Écrire quand même », les offres proches dans ⋯", async () => {
     phone();
     vi.useFakeTimers({ toFake: ["Date"] });
@@ -472,7 +506,8 @@ describe("OfferDetail sur téléphone, une sous-page (maquette Offre, docs/139 �
     const sheet = wrapper.find("[data-test=offer-actions]");
     const titles = sheet.findAll(".offer-action").map((t) => t.text());
     expect(titles.slice(0, 3)).toEqual(["J’ai déjà postulé", "Signaler comme expirée", "Cette note ne me correspond pas"]);
-    expect(titles).toContain("Partager");
+    // « Ouvrir l'annonce sur le site » juste avant « Partager » (§72l, Kevin, 19.11).
+    expect(titles[titles.indexOf("Partager") - 1]).toBe("Ouvrir l’annonce sur le site");
     expect(titles.at(-1)).toBe("Écarter l’offre");
     expect(sheet.find(".offer-actions-end [data-test=offer-action-discard]").exists()).toBe(true);
     expect(sheet.find("[data-test=offer-actions-cancel]").exists()).toBe(false);

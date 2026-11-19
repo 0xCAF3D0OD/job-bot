@@ -1,0 +1,1 @@
+Fiche d'une offre sur téléphone : un seul lien dans « Le poste », « Voir l'annonce complète » qui déplie le texte (et « Masquer l'annonce »), et « Ouvrir l'annonce sur le site » dans le menu ⋯ (décision de Kevin du 19.11, option B)
