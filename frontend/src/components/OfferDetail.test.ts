@@ -505,7 +505,17 @@ describe("OfferDetail sur téléphone, une sous-page (maquette Offre, docs/139 �
     await wrapper.find("[data-test=detail-more]").trigger("click");
     const sheet = wrapper.find("[data-test=offer-actions]");
     const titles = sheet.findAll(".offer-action").map((t) => t.text());
-    expect(titles.slice(0, 3)).toEqual(["J’ai déjà postulé", "Signaler comme expirée", "Cette note ne me correspond pas"]);
+    // L'ordre de la planche ActionsOffre (§72l) ; « Demander à l’assistant » (après « J’ai déjà postulé ») seulement
+    // quand l’assistant est branché.
+    expect(titles.filter((t) => t !== "Demander à l’assistant")).toEqual([
+      "J’ai déjà postulé",
+      "C’est une agence de placement",
+      "Signaler comme expirée",
+      "Cette note ne me correspond pas",
+      "Ouvrir l’annonce sur le site",
+      "Partager",
+      "Écarter l’offre",
+    ]);
     // « Ouvrir l'annonce sur le site » juste avant « Partager » (§72l, Kevin, 19.11).
     expect(titles[titles.indexOf("Partager") - 1]).toBe("Ouvrir l’annonce sur le site");
     expect(titles.at(-1)).toBe("Écarter l’offre");
