@@ -70,6 +70,9 @@ class QuestionIO(BaseModel):
     key: Annotated[str, Field(max_length=80)]
     text: Annotated[str, Field(max_length=300)]
     checked: bool = False
+    # Une question proposée par jobA1 que tu as retirée (menu ⋯, « Retirer », Kevin le 18.11) :
+    # gardée pour que jobA1 ne la propose plus pour ce rendez-vous. Jamais renvoyée dans la page.
+    removed: bool | None = None
 
 
 class QuestionsIn(BaseModel):
@@ -155,7 +158,7 @@ async def _meeting(session: AsyncSession, found: OrpMeeting | None) -> MeetingOu
         asked=[
             str(q.get("text"))
             for q in questions
-            if isinstance(q, dict) and q.get("checked") and q.get("text")
+            if isinstance(q, dict) and q.get("checked") and q.get("text") and not q.get("removed")
         ],
         next_starts_at=await outcomes.following(session, found),
         sheet_text=found.sheet_text,
@@ -231,10 +234,20 @@ async def save_orp_meeting_questions(request: Request, body: QuestionsIn) -> Mee
         found = await service.next_meeting(session, datetime.now(UTC))
         if found is None:
             raise HTTPException(status.HTTP_409_CONFLICT, "indique d'abord la date du rendez-vous")
-        found.questions = [
-            q.model_dump()
+        sent = {q.key for q in body.questions}
+        # Les retraits déjà notés restent, même si la page ne les renvoie pas (elle ne les montre
+        # plus).
+        before = found.questions if isinstance(found.questions, list) else []
+        kept = [
+            q
+            for q in before
+            if isinstance(q, dict) and q.get("removed") and str(q.get("key")) not in sent
+        ]
+        found.questions = kept + [
+            q.model_dump() | ({"checked": False} if q.removed else {})
             for q in body.questions
-            if q.text.strip() or not q.key.startswith("custom:")
+            if (q.text.strip() or not q.key.startswith("custom:"))
+            and not (q.removed and q.key.startswith("custom:"))
         ]
     return await _page(runtime)
 

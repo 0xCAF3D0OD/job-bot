@@ -8379,6 +8379,8 @@ export interface components {
              * @default false
              */
             checked: boolean;
+            /** Removed */
+            removed?: boolean | null;
         };
         /** QuestionStatOut */
         QuestionStatOut: {

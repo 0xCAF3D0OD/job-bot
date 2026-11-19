@@ -211,11 +211,14 @@ describe("Rendez-vous sur téléphone", () => {
       expect(PUT).not.toHaveBeenCalled();
     });
 
-    it("« ⋯ › Modifier » ouvre le champ d’une question à toi ; toucher le texte la coche ; les proposées n’ont pas de ⋯", async () => {
+    it("« ⋯ › Modifier » ouvre le champ d’une question à toi ; toucher le texte la coche ; les proposées n’ont que « Retirer »", async () => {
       serveWith([...PREP.questions, OWN]);
       const { wrapper } = await openPrep();
       expect(wrapper.find("[data-test=rdv-question-edit-intermediate]").exists()).toBe(false);
-      expect(wrapper.find("[data-test=rdv-question-more-intermediate]").exists()).toBe(false);
+      await wrapper.get("[data-test=rdv-question-more-intermediate]").trigger("click");
+      expect(wrapper.find("[data-test=rdv-question-retire-intermediate]").exists()).toBe(true);
+      expect(wrapper.find("[data-test=rdv-question-edit-intermediate]").exists()).toBe(false);
+      expect(wrapper.find("[data-test=rdv-question-delete-intermediate]").exists()).toBe(false);
       await wrapper.get("[data-test='rdv-question-custom:1']").setValue(true);
       expect(PUT).toHaveBeenCalledTimes(1);
       expect(sent()[2]).toMatchObject({ key: "custom:1", checked: true });
@@ -244,6 +247,46 @@ describe("Rendez-vous sur téléphone", () => {
       expect(PUT).toHaveBeenCalledTimes(2);
       expect(wrapper.find("[data-test=rdv-question-field]").exists()).toBe(false);
       expect(wrapper.get("[data-test=rdv-prep-questions]").text()).toContain("Enregistré");
+    });
+
+    it("pendant la saisie : « Annuler » et « Ajouter » sous le champ, plus de « + Ajouter une question »", async () => {
+      serveWith(PREP.questions);
+      const { wrapper } = await openPrep();
+      await wrapper.get("[data-test=rdv-question-add]").trigger("click");
+      expect(wrapper.find("[data-test=rdv-question-add]").exists()).toBe(false);
+      expect(wrapper.get("[data-test=rdv-prep-questions]").text()).not.toContain("Entrée pour");
+      await wrapper.get("[data-test=rdv-question-field]").setValue("Brouillon");
+      await wrapper.get("[data-test=rdv-question-cancel]").trigger("pointerdown");
+      await wrapper.get("[data-test=rdv-question-field]").trigger("blur");
+      await wrapper.get("[data-test=rdv-question-cancel]").trigger("click");
+      await flushPromises();
+      expect(PUT).not.toHaveBeenCalled();
+      expect(wrapper.find("[data-test=rdv-question-field]").exists()).toBe(false);
+      await wrapper.get("[data-test=rdv-question-add]").trigger("click");
+      await wrapper.get("[data-test=rdv-question-field]").setValue("Ma question");
+      await wrapper.get("[data-test=rdv-question-submit]").trigger("click");
+      await flushPromises();
+      expect(PUT).toHaveBeenCalledTimes(1);
+      expect(sent()[2]).toMatchObject({ text: "Ma question", checked: false });
+    });
+
+    it("« ⋯ › Retirer » une question proposée : « Question retirée » 5 s, puis le serveur la garde comme retirée", async () => {
+      vi.useFakeTimers();
+      try {
+        serveWith(PREP.questions);
+        const { wrapper } = await openPrep();
+        await wrapper.get("[data-test=rdv-question-more-intermediate]").trigger("click");
+        await wrapper.get("[data-test=rdv-question-retire-intermediate]").trigger("click");
+        expect(wrapper.find("[data-test=rdv-question-intermediate]").exists()).toBe(false);
+        expect(wrapper.get("[data-test=triage-toast]").text()).toContain("Question retirée");
+        await vi.advanceTimersByTimeAsync(4900);
+        expect(PUT).not.toHaveBeenCalled();
+        await vi.advanceTimersByTimeAsync(200);
+        await flushPromises();
+        expect(sent()).toEqual([PREP.questions[0], { ...PREP.questions[1], checked: false, removed: true }]);
+      } finally {
+        vi.useRealTimers();
+      }
     });
 
     it("« ⋯ › Supprimer » cache la ligne, « Annuler » la remet ; sans annuler, la liste part sans elle", async () => {
@@ -292,7 +335,8 @@ describe("Rendez-vous sur téléphone", () => {
     expect(name.props("open")).toBe(true);
     // Une seule page à la fois : la préparation laisse la place.
     expect(prep.props("open")).toBe(false);
-    expect(name.text()).toContain("Tout est enregistré dès que tu quittes un champ");
+    // §72g (Kevin, 18.11) : plus de phrase « Tout est enregistré… » sous le titre.
+    expect(name.text()).not.toContain("Tout est enregistré");
     expect(name.findAll("label").map((l) => l.text())).toEqual(["Prénom et nom", "Ton conseiller ORP", "Office régional"]);
     expect((name.get("[data-test=feuille-nom-name]").element as HTMLInputElement).value).toBe("Camille Exemple");
     expect((name.get("[data-test=feuille-nom-advisor]").element as HTMLInputElement).value).toBe("M. Favre");
