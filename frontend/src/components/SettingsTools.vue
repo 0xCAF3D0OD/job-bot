@@ -133,7 +133,7 @@ const go = (rubrique: string) => void router.push({ path: "/reglages", query: { 
         >{{ running ? "Relève en cours…" : message || "Relever tout de suite les offres des sites suivis" }}</span></span>
         <button
           type="button"
-          class="tonal rg-run"
+          class="rg-run"
           :aria-busy="running || undefined"
           :aria-disabled="running || undefined"
           data-test="account-collect"
@@ -189,5 +189,6 @@ const go = (rubrique: string) => void router.push({ path: "/reglages", query: { 
 </template>
 
 <style>
-.rg-run { flex: none; min-height: 44px; padding: 0 var(--space-5); border: 0; border-radius: var(--radius-pill); background: var(--primary-soft); color: var(--primary-text); font: inherit; font-weight: var(--weight-bold); cursor: pointer; }
+/* §72f (Kevin, 18.11) : un seul bouton plein par écran ; « Lancer » passe du tonal pâle au contour bleu sur fond blanc. */
+.rg-run { flex: none; min-height: 44px; padding: 0 var(--space-5); border: 1.5px solid var(--action); border-radius: var(--radius-pill); background: var(--surface); color: var(--primary-text); font: inherit; font-weight: var(--weight-bold); cursor: pointer; }
 </style>
