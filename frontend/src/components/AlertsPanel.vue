@@ -115,6 +115,7 @@ async function toggleCreated(search: AlertSearch, cell: Cell): Promise<void> {
 function statusText(cell: Cell): string {
   if (cell.status === "received" && cell.received_at) return `reçue ${onDay(cell.received_at)}`;
   if (cell.status === "created") return "créée, en attente";
+  if (cell.status === "pending") return "à confirmer";
   return "à créer";
 }
 

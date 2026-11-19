@@ -38,7 +38,7 @@ describe("AvatarPicker (docs/143)", () => {
     await useProfileImage().load(true);
     const wrapper = mount(AvatarPicker, { attachTo: document.body, props: { open: true } });
     await flushPromises();
-    expect(wrapper.text()).toContain("Elle s’affiche seulement dans jobA1. Elle n’est jamais envoyée aux employeurs.");
+    expect(wrapper.text()).toContain("Visible seulement dans jobA1.");
     const options = wrapper.findAll(".avatar-option");
     expect(options.map((o) => o.text())).toEqual(["KDInitiales", "Souriant", "Clin d'œil", "Casque", "Lunettes", "Bonnet", "Écharpe", "Café", "Étoile", "Ma photo"]);
     expect(wrapper.get("[data-test=avatar-initials]").attributes("aria-pressed")).toBe("true");

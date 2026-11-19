@@ -368,7 +368,7 @@ watch(viewMonth, () => void load());
             class="bilan-section-sub"
             data-test="orp-proof-note"
           >
-            Déjà déclarées. L’ORP peut demander un justificatif pour chaque recherche : l’e-mail de confirmation ou une capture de la candidature.
+            Déjà déclarées. Garde un justificatif pour chacune.
           </p>
           <OrpSearchRows
             :rows="declared"

@@ -411,7 +411,7 @@ const markedCount = computed(() => FROM_CV.filter(marked).length);
         </ul>
       </section>
       <p class="identity-ai">
-        Ces informations servent à l’en-tête de tes lettres et aux formulaires de candidature. Elles ne sont jamais envoyées à l’IA.
+        Pour tes lettres et formulaires. Jamais envoyées à l’IA.
       </p>
       <div class="identity-actions">
         <button

@@ -107,8 +107,8 @@ describe("OfferCompatSheet, comment la note est calculée (prompt du 10 novembre
     ]);
     expect(rows[0]!.find("[role=img]").attributes("aria-label")).toBe("37 points sur 40");
     expect(rows.map((r) => r.classes().find((c) => c.startsWith("is-")))).toEqual(["is-partial", "is-check", "is-full", "is-full", "is-full"]);
-    expect(wrapper.find("[data-test=compat-calc-foot]").text()).toContain("sur l’annonce complète");
-    expect(wrapper.find("[data-test=compat-calc-foot]").text()).toContain("jobA1 ne lit pas d’informations personnelles");
+    expect(wrapper.find("[data-test=compat-calc-foot]").text()).not.toContain("sur l’annonce complète");
+    expect(wrapper.find("[data-test=compat-calc-foot]").text()).toContain(", sans âge ni nationalité.");
     await wrapper.find("[data-test=compat-tip-action]").trigger("click");
     expect(wrapper.find("[data-test=compat-tip-action]").text()).toBe("Ajouter une compétence");
     expect(wrapper.emitted("tip")).toEqual([["skills"]]);

@@ -635,8 +635,8 @@ describe("Envoyées (maquette Envoyees, 7.11.2026)", () => {
     const { wrapper, router } = await mountView("/candidatures/suivi?statut=relancer");
     const group = wrapper.find("[data-test=sent-filters] [role=group]");
     expect(group.attributes("aria-label")).toBe("Statut");
-    // « Refusées » à 0 : masqué.
-    expect(group.findAll("button").map((b) => b.text())).toEqual(["Toutes4", "À relancer1", "Sans réponse1", "Entretien1"]);
+    // « Réponse reçue » et « Refusée » à 0 : masqués. « Envoyée » regroupe en attente et sans réponse (Kevin, 18.11).
+    expect(group.findAll("button").map((b) => b.text())).toEqual(["Toutes4", "À relancer1", "Envoyée3", "Entretien1"]);
     expect(group.findAll("button").map((b) => b.attributes("aria-pressed"))).toEqual(["false", "true", "false", "false"]);
     const names = () => wrapper.findAll("[data-test=sent-list] [data-test=application]").map((c) => c.text().match(/[A-ZÉ][a-zé]+ SA/)?.[0]);
     expect(names()).toEqual(["Ancienne SA"]);

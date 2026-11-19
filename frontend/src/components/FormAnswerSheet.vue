@@ -348,7 +348,7 @@ async function save(): Promise<void> {
           </FormField>
           <template v-if="field === 'salary'">
             <p class="answer-private">
-              <AppIcon name="lock" />Visible seulement par toi. Utilisé seulement si un formulaire le demande, jamais envoyé à l’IA.
+              <AppIcon name="lock" />Visible par toi seul, jamais envoyé à l’IA.
             </p>
             <fieldset class="answer-mode">
               <legend>Si un formulaire le demande</legend>

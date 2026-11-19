@@ -1,0 +1,1 @@
+Préparer le rendez-vous (téléphone) : « Annuler » et « Ajouter » sous le champ d'une nouvelle question (§72b), ⋯ « Retirer » sur les questions proposées par jobA1 (le serveur ne les remet plus), bandeau « Question retirée » 5 s ; FeuilleNom sans la phrase « Tout est enregistré… » (§72g)

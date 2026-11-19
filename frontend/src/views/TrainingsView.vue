@@ -615,7 +615,7 @@ onMounted(() => void load());
       class="training-funding-sheet"
       data-test="orp-sheet"
     >
-      <p>L’ORP peut financer une formation. Il faut d’abord la demander à l’ORP et attendre son accord, avant de t’inscrire.</p>
+      <p>Demande l’accord de ta conseillère avant de t’inscrire.</p>
       <a
         v-for="link in ORP_LINKS"
         :key="link.url"

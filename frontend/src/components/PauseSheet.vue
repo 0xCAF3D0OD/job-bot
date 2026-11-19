@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 
+import AppIcon from "./AppIcon.vue";
 import BottomSheet from "./BottomSheet.vue";
 
 // La pause du Rythme (planche ReglagesRythmePause du 18.11, §70 ; Q7 de Kevin du 17.11) : une feuille en îlot avec un
@@ -9,22 +10,13 @@ import BottomSheet from "./BottomSheet.vue";
 // rendez-vous ORP marqué d’un point orange, et signalé s’il tombe pendant la pause. Rien n’est enregistré avant
 // « Enregistrer » ; « Effacer » vide la plage (enregistrée vide, elle retire la pause).
 // `wide` : sur ordinateur (planche ReglagesOrdinateurPause du 18.11, §71), la même plage dans une fenêtre centrée de
-// 760 px, deux mois côte à côte (chacun avec ses jours de la semaine) ; les mois suivants viennent deux par deux en
-// faisant défiler, comme sur téléphone. « Clic » au lieu de « toucher ».
+// 760 px, deux mois côte à côte (chacun avec ses jours de la semaine), flèches « Mois précédent » / « Mois suivant » de
+// 44 px de chaque côté des deux noms, sans défilement (Kevin, 18.11, 14 h 38). « Clic » au lieu de « toucher ».
 const props = defineProps<{ open: boolean; from: string | null; until: string | null; meeting?: string | null; wide?: boolean }>();
 const emit = defineEmits<{ close: []; save: [from: string | null, until: string | null] }>();
 
 const start = ref<string | null>(null);
 const end = ref<string | null>(null);
-watch(
-  () => props.open,
-  (open) => {
-    if (!open) return;
-    start.value = props.from;
-    end.value = props.until && props.from && props.until >= props.from ? props.until : null;
-  },
-  { immediate: true },
-);
 
 const iso = (d: Date): string =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -63,6 +55,23 @@ const months = computed(() => {
     };
   });
 });
+
+// Ordinateur : les deux mois montrés (le premier est months[page]).
+const page = ref(0);
+const shown = computed(() => (props.wide ? months.value.slice(page.value, page.value + 2) : months.value));
+watch(
+  () => props.open,
+  (open) => {
+    if (!open) return;
+    start.value = props.from;
+    end.value = props.until && props.from && props.until >= props.from ? props.until : null;
+    // Sur ordinateur, la fenêtre s’ouvre sur le mois du début de la pause (sinon le mois en cours).
+    const from = props.from;
+    const at = from ? months.value.findIndex((month) => month.key === `${from.slice(0, 7)}-01`) : -1;
+    page.value = Math.min(Math.max(at, 0), months.value.length - 2);
+  },
+  { immediate: true },
+);
 
 function pick(day: string): void {
   if (day < today) return;
@@ -141,7 +150,7 @@ function cellClass(date: Date): Record<string, boolean> {
           rx="2"
         /><path d="M3 10h18M8 3v4M16 3v4" /></svg>
         <span>{{ summary }}</span>
-        <small v-if="length || wide">{{ [length ? `${length} ${length > 1 ? "jours" : "jour"}` : "", wide ? "1er clic : Du, 2e clic : Jusqu’au" : ""].filter(Boolean).join(" · ") }}</small>
+        <small v-if="length">{{ length }} {{ length > 1 ? "jours" : "jour" }}</small>
       </p>
       <div
         v-if="!wide"
@@ -155,8 +164,30 @@ function cellClass(date: Date): Record<string, boolean> {
       </div>
     </div>
     <div class="pause-months">
+      <template v-if="wide">
+        <button
+          type="button"
+          class="pause-nav pause-prev"
+          aria-label="Mois précédent"
+          :aria-disabled="page === 0 ? 'true' : undefined"
+          data-test="pause-prev"
+          @click="page > 0 && (page -= 1)"
+        >
+          <AppIcon name="chevron-left" />
+        </button>
+        <button
+          type="button"
+          class="pause-nav pause-next"
+          aria-label="Mois suivant"
+          :aria-disabled="page >= months.length - 2 ? 'true' : undefined"
+          data-test="pause-next"
+          @click="page < months.length - 2 && (page += 1)"
+        >
+          <AppIcon name="chevron" />
+        </button>
+      </template>
       <section
-        v-for="month in months"
+        v-for="month in shown"
         :key="month.key"
         class="pause-month"
         :aria-label="month.title"
@@ -263,9 +294,16 @@ function cellClass(date: Date): Record<string, boolean> {
   .pause-wide .sheet-body { overflow: hidden; padding: 0; }
   .pause-wide .pause-top { position: static; }
   .pause-wide .pause-sum { margin: var(--space-3) var(--space-6) 0; padding: 0 var(--space-4); }
-  .pause-wide .pause-months { display: grid; grid-template-columns: repeat(2, max-content); justify-content: space-between; column-gap: calc(var(--space-8) + var(--space-2)); row-gap: var(--space-6); box-sizing: content-box; height: 342px; padding: var(--space-5) var(--space-8) var(--space-2); overflow-y: auto; overscroll-behavior: contain; scroll-snap-type: y mandatory; scroll-padding-top: var(--space-5); }
-  .pause-wide .pause-month { scroll-snap-align: start; }
-  .pause-wide .pause-month h3 { margin: 0 0 var(--space-3); line-height: var(--space-6); }
+  /* Hauteur d’un mois de six semaines : la fenêtre ne saute pas d’un mois à l’autre. */
+  .pause-wide .pause-months { position: relative; display: grid; grid-template-columns: repeat(2, max-content); justify-content: space-between; align-content: start; column-gap: calc(var(--space-8) + var(--space-2)); box-sizing: content-box; min-height: 362px; padding: var(--space-5) var(--space-8) var(--space-2); }
+  /* Planche du §72 : flèches cerclées dans la ligne du nom du mois, « < » à gauche du premier, « > » à droite du second. */
+  .pause-nav { position: absolute; top: var(--space-5); display: grid; place-items: center; width: 44px; height: 44px; min-height: 0; padding: 0; border: 0; border-radius: var(--radius-pill); background: transparent; box-shadow: inset 0 0 0 1.5px var(--card-line); color: var(--text); cursor: pointer; }
+  .pause-nav:hover { background: color-mix(in srgb, var(--text) 6%, transparent); }
+  .pause-nav[aria-disabled="true"] { color: var(--text-disabled); cursor: default; background: transparent; }
+  .pause-nav .icon { width: 20px; height: 20px; }
+  .pause-prev { left: var(--space-8); }
+  .pause-next { right: var(--space-8); }
+  .pause-wide .pause-month h3 { display: grid; place-items: center; min-height: 44px; margin: 0 0 var(--space-3); line-height: var(--space-6); }
   .pause-wide .pause-week, .pause-wide .pause-grid { grid-template-columns: repeat(7, 44px); }
   .pause-wide .pause-week { margin-bottom: var(--space-2); padding: 0; border: 0; }
   .pause-wide .pc-rdv::after { bottom: var(--space-1); }

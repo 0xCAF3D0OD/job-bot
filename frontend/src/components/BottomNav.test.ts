@@ -44,7 +44,7 @@ describe("La barre du bas du téléphone (docs/139, D1 et D4 du 2026-11-02)", ()
     expect(wrapper.text()).not.toContain("Progresser");
   });
 
-  it("la page en cours, les offres à examiner, le creux sous l’onglet actif ; cachée sur les écrans de travail", async () => {
+  it("la page en cours, aucune pastille sur Candidatures, le creux sous l’onglet actif ; cachée sur les écrans de travail", async () => {
     const router = makeRouter();
     await router.push("/candidatures/offres");
     const wrapper = mount(BottomNav, { global: { plugins: [router] } });
@@ -53,7 +53,9 @@ describe("La barre du bas du téléphone (docs/139, D1 et D4 du 2026-11-02)", ()
     expect(jobs.classes()).toContain("active");
     expect(jobs.attributes("aria-current")).toBe("page");
     expect(jobs.attributes("href")).toBe("/candidatures/suivi");
-    expect(jobs.text()).toContain("4");
+    // Planches du 18.11 (Kevin, 18.11) : aucun nombre sur l’onglet Candidatures.
+    expect(jobs.find(".count-badge").exists()).toBe(false);
+    expect(wrapper.find("[data-test=tab-bilan] [data-icon=growth]").exists()).toBe(true);
     // Deuxième onglet sur cinq : centre à 30 %.
     const bar = wrapper.find("[data-test=tab-bar]");
     expect(bar.classes()).toContain("has-notch");

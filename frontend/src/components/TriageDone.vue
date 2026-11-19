@@ -42,9 +42,7 @@ defineExpose({ focus: () => root.value?.focus() });
       hand-phone
     >
       <p data-test="triage-summary">
-        {{ line }}<template v-if="!phone && kept.length">
-          Tu peux préparer les lettres et CV maintenant, ou plus tard depuis Candidatures.
-        </template>
+        {{ line }}
       </p>
       <ul
         v-if="kept.length"

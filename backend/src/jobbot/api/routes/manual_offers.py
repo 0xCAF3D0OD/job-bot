@@ -13,7 +13,7 @@ from fastapi import APIRouter, File, HTTPException, Request, UploadFile, status
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import select
 
-from jobbot import accounts, manual_offers
+from jobbot import accounts, manual_offers, plans
 from jobbot.auth.service import Window
 from jobbot.db.models import Evaluation, Offer
 from jobbot.log import get_logger
@@ -205,6 +205,42 @@ async def read_pdf(request: Request, file: Annotated[UploadFile, File()]) -> Man
         return ManualPdfOut(problem=exc.reason)
     log.info("manual_offer_pdf_read", size=len(data), chars=len(text))
     return ManualPdfOut(text=text)
+
+
+class ManualFileOut(BaseModel):
+    # Le texte du fichier, à relire dans le champ avant « Ajouter l'offre » ; sinon ce qui l'a
+    # empêché (mêmes raisons que sur la fiche, offer_text.OfferFileOut) ; `limit` : la phrase de
+    # la formule épuisée.
+    text: str | None = None
+    problem: (
+        Literal["no-text", "too-big", "not-supported", "unreadable", "ai-off", "ai-down", "budget"]
+        | None
+    ) = None
+    limit: str | None = None
+
+
+@router.post("/file", operation_id="readManualOfferFile", responses=PDF_RESPONSES)
+async def read_file(request: Request, file: Annotated[UploadFile, File()]) -> ManualFileOut:
+    """« Capture ou PDF » dans « Ajouter une offre » (§72 du 18.11, planche AjouterOffreTel) :
+    un PDF lu sans IA, ou une capture PNG ou JPG recopiée par l'IA, avec la même règle que sur la
+    fiche (Q1 du 17.11) : un fichier à la fois, 5 Mo au plus, 20 par heure (partagés avec le PDF),
+    une formule épuisée refuse la capture avant tout appel. Le fichier n'est ni rangé ni journalisé
+    (E-5, J-1) ; rien n'est créé ici."""
+    account = f"compte-{accounts.current()}"
+    if wait := pdf_per_account.take(account):
+        minutes = max(1, -(-wait // 60))
+        word = "minute" if minutes == 1 else "minutes"
+        raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, f"Réessaie dans {minutes} {word}.")
+    data = await file.read(manual_offers.MAX_PDF_BYTES + 1)
+    try:
+        text = await manual_offers.manual_file_text(_runtime(request), data)
+    except plans.LimitReached as exc:
+        return ManualFileOut(limit=str(exc))
+    except manual_offers.ReadProblem as exc:
+        log.info("manual_offer_file_refused", reason=exc.reason, size=len(data))
+        return ManualFileOut(problem=exc.reason)
+    log.info("manual_offer_file_read", size=len(data), chars=len(text))
+    return ManualFileOut(text=text)
 
 
 @router.post("", operation_id="addManualOffer", status_code=status.HTTP_201_CREATED)

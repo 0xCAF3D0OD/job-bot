@@ -817,7 +817,7 @@ async function finish(to: string): Promise<void> {
                   <span />
                 </div>
                 <p class="wdk-file-note">
-                  {{ readState === "paused" ? "Ton CV est bien enregistré. La lecture reprend toute seule dès que la connexion revient." : "On repère tes postes, tes compétences et tes lieux. Tu peux continuer, on termine pendant ce temps." }}
+                  {{ readState === "paused" ? "Ton CV est enregistré. La lecture reprend toute seule." : "Tu peux continuer, on termine en fond." }}
                 </p>
               </template>
               <p
@@ -866,8 +866,7 @@ async function finish(to: string): Promise<void> {
               data-test="cv-privacy"
             >
               <AppIcon name="lock" />
-              <span>Ton CV reste privé&#8239;: il sert à noter les offres et à préparer tes lettres. L’IA n’en reçoit que les parties utiles,
-                sans tes coordonnées. <RouterLink to="/tes-donnees#ia">En savoir plus</RouterLink></span>
+              <span>Ton CV reste privé. L’IA ne voit jamais tes coordonnées. <RouterLink to="/tes-donnees#ia">En savoir plus</RouterLink></span>
             </p>
             <div class="wdk-foot">
               <template v-if="!cvName">
@@ -907,7 +906,7 @@ async function finish(to: string): Promise<void> {
 
           <template v-else-if="step === 2">
             <p class="wdk-lead">
-              {{ fromCv ? "jobA1 a rempli ces critères avec ton CV. Vérifie-les et modifie-les si besoin. Tu pourras aussi les changer plus tard dans Profil." : cvUnread ? "Ton CV n’a pas pu être lu : indique-les ici, tu pourras les changer plus tard dans Profil." : "Tu pourras les changer plus tard dans Profil." }}
+              {{ fromCv ? "Repris de ton CV. Modifie-les si besoin." : cvUnread ? "Ton CV n’a pas pu être lu : indique-les ici, tu pourras les changer plus tard dans Profil." : "Tu pourras les changer plus tard dans Profil." }}
             </p>
             <WelcomeCriteria
               ref="criteriaBlock"
@@ -1034,7 +1033,7 @@ async function finish(to: string): Promise<void> {
 
           <template v-else>
             <p class="wdk-lead">
-              {{ offers.length ? "jobA1 a lu les offres publiées cette semaine. Celles-ci te correspondent le mieux. Garde ou écarte : jobA1 apprend de tes choix." : "jobA1 lit les offres chaque nuit. Les premières qui te correspondent t’attendront dans Candidatures." }}
+              {{ offers.length ? "Les meilleures offres de la semaine. Garde ou écarte." : "jobA1 lit les offres chaque nuit. Les premières qui te correspondent t’attendront dans Candidatures." }}
             </p>
             <ul
               v-if="offers.length"
@@ -1343,8 +1342,7 @@ async function finish(to: string): Promise<void> {
               data-test="cv-privacy"
             >
               <AppIcon name="lock" />
-              <span>Ton CV reste privé : il sert à noter les offres et à préparer tes lettres. L’IA n’en reçoit que les parties utiles,
-                sans tes coordonnées. <RouterLink to="/tes-donnees#ia">En savoir plus</RouterLink></span>
+              <span>Ton CV reste privé. L’IA ne voit jamais tes coordonnées. <RouterLink to="/tes-donnees#ia">En savoir plus</RouterLink></span>
             </p>
           </template>
 

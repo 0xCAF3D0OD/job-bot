@@ -246,7 +246,7 @@ function draftCache(): Map<number, { subject: string; text: string }> {
     </p>
     <p class="fc-after">
       <span class="fc-after-pill">Après l’envoi</span>
-      Quand tu reviens, le statut passe à « Relancé » et la prochaine relance est proposée dans 10 jours.
+      Au retour : statut « Relancé », prochaine relance dans 10 jours.
     </p>
   </section>
   <section
@@ -330,7 +330,7 @@ function draftCache(): Map<number, { subject: string; text: string }> {
           {{ draft.text }}
         </div>
         <p class="follow-card-note">
-          Quand tu reviens, le statut passe à « Relancé » et la prochaine relance est proposée dans 10 jours.
+          Au retour : statut « Relancé », prochaine relance dans 10 jours.
         </p>
         <p
           v-if="saveError"

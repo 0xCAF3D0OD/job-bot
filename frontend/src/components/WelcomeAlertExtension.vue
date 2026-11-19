@@ -99,7 +99,7 @@ const track = computed(() =>
 
         <template v-else>
           <b class="wa-title">Crée l’alerte, puis confirme le code</b>
-          <span class="wa-help">L’extension colle le code pour toi. C’est toi qui cliques sur jobup.<template v-if="installed"> Cette page passe à la suite dès que l’alerte est créée.</template></span>
+          <span class="wa-help">L’extension colle le code, tu cliques sur jobup.</span>
           <ul
             v-if="installed && started"
             class="wa-follow"

@@ -147,8 +147,7 @@ onMounted(async () => {
         Retirer l’accès de Get’emAll&nbsp;?
       </h2>
       <p id="getemall-remove-text">
-        Get’emAll ne pourra plus lire ton suivi. Ton entraînement reste dans Get’emAll : tu peux l’effacer depuis
-        l’app. Tu pourras relier ton compte de nouveau plus tard.
+        Get’emAll ne lira plus ton suivi. Ton entraînement y reste.
       </p>
       <div class="partner-confirm-actions">
         <button

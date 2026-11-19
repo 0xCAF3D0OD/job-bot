@@ -203,7 +203,8 @@ const newcomerSub = computed(() =>
 );
 // Le titre de la bande : l'action du jour, calculée sur le rythme qu'il faut pour tenir l'objectif ORP ; sa fin en
 // écriture manuscrite (un seul accent par écran). Un seul élément de titre.
-type Heading = { lead: string; hand: string; sub: string };
+// pace : le titre de l'ordinateur un jour de rythme, écrit à la main comme ses variantes, sans point final (Kevin, 18.11).
+type Heading = { lead: string; hand: string; sub: string; pace?: string };
 const heading = computed<Heading>(() => {
   const t = today.value;
   if (!t) return { lead: "", hand: "", sub: "" };
@@ -222,7 +223,7 @@ const heading = computed<Heading>(() => {
   const sorting = phone.value ? toSort.value.length : dose.value.length;
   const offers = triagePending.value && sorting ? ` ${plural(sorting, "offre est", "offres sont")} à trier.` : "";
   if (perDay) {
-    return { lead: plural(perDay, "candidature", "candidatures"), hand: "à envoyer.", sub: `C’est ton rythme pour rester dans l’objectif ORP.${offers}` };
+    return { lead: plural(perDay, "candidature", "candidatures"), hand: "à envoyer.", pace: `${plural(perDay, "candidature", "candidatures")} à envoyer`, sub: `C’est ton rythme pour rester dans l’objectif ORP.${offers}` };
   }
   if (perDay === 0) return { lead: "Tout est", hand: "à jour.", sub: `Objectif ORP du mois atteint : le reste du mois est à toi.${offers}` };
   return { lead: "Tout est", hand: "à jour.", sub: offers.trim() };
@@ -596,6 +597,14 @@ const { me } = useAuth();
             data-test="today-sentence"
           >
             <span class="aj-hand">{{ heading.hand }}</span>
+          </h1>
+          <h1
+            v-else-if="heading.pace"
+            id="today-title"
+            class="aj-late"
+            data-test="today-sentence"
+          >
+            <span class="aj-hand">{{ heading.pace }}</span>
           </h1>
           <h1
             v-else

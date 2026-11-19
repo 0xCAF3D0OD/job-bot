@@ -13,6 +13,8 @@ export interface UndoOffer {
   restore: () => Promise<void> | void;
   // « Voir » à côté d'« Annuler » (K5, Kevin le 17.11) : valide l'action, puis mène là où l'élément est parti.
   see?: () => void;
+  // Durée du bandeau quand elle n'est pas de 6 s (« Question retirée » : 5 s, Kevin le 18.11).
+  ms?: number;
 }
 
 const pending = ref<(UndoOffer & { id: number }) | null>(null);
@@ -21,7 +23,7 @@ let seq = 0;
 
 function schedule(): void {
   clearTimeout(timer);
-  timer = setTimeout(() => void flush(), UNDO_MS);
+  timer = setTimeout(() => void flush(), pending.value?.ms ?? UNDO_MS);
 }
 
 async function flush(keepalive = false): Promise<void> {

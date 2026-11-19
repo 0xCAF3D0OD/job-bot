@@ -78,9 +78,11 @@ describe("OrpFiche sur ordinateur (wide)", () => {
     expect(wrapper.find("[data-test=orp-fiche-complete]").exists()).toBe(false);
   });
 
-  it("la phrase du bas nomme le mois de la recherche", async () => {
+  it("plus de phrase sous « Marquer comme déclarée » (Kevin, 18.11, §72g)", async () => {
     const wrapper = await mountFiche();
-    expect(wrapper.get("[data-test=orp-fiche-note]").text()).toBe("Elle passe dans « Recherches d’octobre ».");
+    expect(wrapper.find("[data-test=orp-fiche-declare]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=orp-fiche-note]").exists()).toBe(false);
+    expect(wrapper.text()).not.toContain("Elle passe dans");
   });
 
   it("téléphone et détail d'une envoyée (sans wide) : inchangés", async () => {
@@ -90,6 +92,6 @@ describe("OrpFiche sur ordinateur (wide)", () => {
     expect(labels(wrapper)).not.toContain("Lien de l’annonce");
     expect(labels(wrapper)).toContain("Rue et n°");
     expect(wrapper.get(".block-tick").text()).toBe("☐ case à cocher dans Job-Room");
-    expect(wrapper.get("[data-test=orp-fiche-note]").text()).toBe("Elle passe dans « Recherches du mois ».");
+    expect(wrapper.find("[data-test=orp-fiche-note]").exists()).toBe(false);
   });
 });

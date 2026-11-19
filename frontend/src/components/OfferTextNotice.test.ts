@@ -1,4 +1,4 @@
-import { flushPromises, mount } from "@vue/test-utils";
+import { flushPromises, mount, type VueWrapper } from "@vue/test-utils";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createMemoryHistory, createRouter } from "vue-router";
 
@@ -217,7 +217,7 @@ describe("OfferDetail, annonce complète lue automatiquement (prompt du 10 novem
     await flushPromises();
     expect(wrapper.find("dialog[data-test=give-sheet]").attributes("open")).toBeUndefined();
     expect(wrapper.find("dialog[data-test=paste-sheet]").attributes("open")).toBeDefined();
-    expect(wrapper.find("[data-test=paste-sheet]").text()).toContain("Tout le texte est accepté, même très long.");
+    expect(wrapper.find("[data-test=paste-sheet]").text()).toContain("Copie tout le texte de l’annonce et colle-le ici.");
   });
 
   it("refus dit par la lecture demandée d’ici : le bloc remplace la ligne de lecture", async () => {
@@ -251,6 +251,79 @@ describe("OfferDetail, annonce complète lue automatiquement (prompt du 10 novem
     expect(POST).not.toHaveBeenCalled();
   });
 
+  describe("« Coller » lit le presse-papiers (Kevin, 18.11)", () => {
+    function clipboard(readText: () => Promise<string>): void {
+      Object.defineProperty(navigator, "clipboard", { configurable: true, value: { readText: vi.fn(readText) } });
+    }
+    afterEach(() => {
+      Object.defineProperty(navigator, "clipboard", { configurable: true, value: undefined });
+    });
+    async function openPasteSheet(): Promise<VueWrapper> {
+      const wrapper = await mountDetail(offer({ text_reading: "refused" }));
+      await wrapper.find("[data-test=give-offer]").trigger("click");
+      await wrapper.find("[data-test=paste-offer-text]").trigger("click");
+      await flushPromises();
+      return wrapper;
+    }
+    const area = (wrapper: VueWrapper) => wrapper.find<HTMLTextAreaElement>("[data-test=paste-text] [data-test=composer-input]");
+
+    it("le texte copié arrive dans la fenêtre de collage, prêt pour « Refaire la note »", async () => {
+      const copied = "Infirmier·ère diplômé·e HES, 80 à 100 %. ".repeat(6);
+      clipboard(async () => `  ${copied}\n`);
+      const wrapper = await openPasteSheet();
+      expect(navigator.clipboard.readText).toHaveBeenCalledTimes(1);
+      expect(area(wrapper).element.value).toBe(copied.trim());
+      expect(wrapper.find("[data-test=paste-text] [data-test=composer-send]").attributes("aria-disabled")).toBeUndefined();
+    });
+
+    it("téléphone : « Coller le texte de l’annonce » lit le presse-papiers, puis la fenêtre de collage s'ouvre remplie", async () => {
+      onPhone();
+      const copied = "Soins aigus, horaires irréguliers, équipe de 12 personnes. ".repeat(5);
+      clipboard(async () => copied);
+      const wrapper = await mountDetail(offer({ text_reading: "refused" }));
+      await wrapper.find("[data-test=give-offer]").trigger("click");
+      await wrapper.find("[data-test=give-sheet] [data-test=paste-offer-text]").trigger("click");
+      await new Promise((done) => setTimeout(done, 350));
+      await flushPromises();
+      expect(wrapper.find("dialog[data-test=give-sheet]").attributes("open")).toBeUndefined();
+      expect(wrapper.find("dialog[data-test=paste-sheet]").attributes("open")).toBeDefined();
+      expect(area(wrapper).element.value).toBe(copied.trim());
+    });
+
+    it("accès refusé : la fenêtre s'ouvre vide, on colle à la main", async () => {
+      clipboard(async () => {
+        throw new DOMException("refusé", "NotAllowedError");
+      });
+      const wrapper = await openPasteSheet();
+      expect(wrapper.find("[data-test=paste-sheet]").exists()).toBe(true);
+      expect(area(wrapper).element.value).toBe("");
+    });
+
+    it("sans presse-papiers lisible (navigateur ancien) : la fenêtre s'ouvre vide", async () => {
+      Object.defineProperty(navigator, "clipboard", { configurable: true, value: undefined });
+      const wrapper = await openPasteSheet();
+      expect(area(wrapper).element.value).toBe("");
+    });
+
+    it("un simple lien copié n'est pas pris pour le texte de l'annonce", async () => {
+      clipboard(async () => "https://www.linkedin.com/jobs/view/123/");
+      const wrapper = await openPasteSheet();
+      expect(area(wrapper).element.value).toBe("");
+    });
+
+    it("un texte déjà commencé n'est jamais remplacé", async () => {
+      clipboard(async () => "Autre texte copié ailleurs");
+      const wrapper = await mountDetail(offer({ text_reading: "refused" }));
+      await wrapper.find("[data-test=give-offer]").trigger("click");
+      await wrapper.find("[data-test=paste-offer-text]").trigger("click");
+      await flushPromises();
+      await area(wrapper).setValue("Mon début de texte");
+      await wrapper.find("[data-test=paste-offer-text]").trigger("click");
+      await flushPromises();
+      expect(area(wrapper).element.value).toBe("Mon début de texte");
+    });
+  });
+
   it("feuille de collage : compteur, « Refaire la note » `aria-disabled` sous 200 caractères, puis enregistré", async () => {
     PUT.mockResolvedValue({ data: { saved: true, source: "collé", score: 72, problem: null, paste: false } });
     const wrapper = await mountDetail(offer({ text_reading: "refused" }));
@@ -258,7 +331,7 @@ describe("OfferDetail, annonce complète lue automatiquement (prompt du 10 novem
     await wrapper.find("[data-test=paste-offer-text]").trigger("click");
     const sheet = wrapper.find("[data-test=paste-sheet]");
     expect(sheet.text()).toContain("Coller le texte de l’annonce");
-    expect(sheet.text()).toContain("Sur la page de l’annonce, sélectionne tout le texte, copie-le et colle-le ici. Tout le texte est accepté, même très long.");
+    expect(sheet.text()).toContain("Copie tout le texte de l’annonce et colle-le ici.");
     const area = wrapper.find("[data-test=paste-text] [data-test=composer-input]");
     expect(area.attributes("rows")).toBe("5");
     expect(area.attributes("maxlength")).toBeUndefined();

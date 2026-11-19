@@ -1190,6 +1190,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/offers/manual/file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Read File
+         * @description « Capture ou PDF » dans « Ajouter une offre » (§72 du 18.11, planche AjouterOffreTel) :
+         *     un PDF lu sans IA, ou une capture PNG ou JPG recopiée par l'IA, avec la même règle que sur la
+         *     fiche (Q1 du 17.11) : un fichier à la fois, 5 Mo au plus, 20 par heure (partagés avec le PDF),
+         *     une formule épuisée refuse la capture avant tout appel. Le fichier n'est ni rangé ni journalisé
+         *     (E-5, J-1) ; rien n'est créé ici.
+         */
+        post: operations["readManualOfferFile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/offers/manual/{offer_id}/unfill": {
         parameters: {
             query?: never;
@@ -3761,6 +3785,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/applications/{application_id}/debrief": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Debrief */
+        get: operations["getDebrief"];
+        /**
+         * Save Debrief
+         * @description Enregistre le point sur l'entretien du jour prévu : crée le retour, ou complète celui de ce
+         *     jour (sa note sur 5 et ses autres réponses restent). Aucune IA, le statut ne change pas.
+         */
+        put: operations["saveDebrief"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/interviews/insights": {
         parameters: {
             query?: never;
@@ -4188,7 +4234,7 @@ export interface components {
              * Status
              * @enum {string}
              */
-            status: "received" | "created" | "todo";
+            status: "received" | "created" | "pending" | "todo";
             /** Received At */
             received_at: string | null;
             /** Created At */
@@ -4515,7 +4561,7 @@ export interface components {
          * ApplicationStatus
          * @enum {string}
          */
-        ApplicationStatus: "en_attente" | "relancee" | "entretien" | "refus" | "engagement" | "sans_reponse";
+        ApplicationStatus: "en_attente" | "relancee" | "reponse" | "entretien" | "refus" | "engagement" | "sans_reponse";
         /** ApplicationUpdate */
         ApplicationUpdate: {
             /**
@@ -4662,7 +4708,7 @@ export interface components {
             /** People Count */
             people_count?: number | null;
             /** Rating */
-            rating: number;
+            rating?: number | null;
             /** Stress */
             stress?: number | null;
             /** Interest */
@@ -4690,13 +4736,17 @@ export interface components {
             /** Warnings */
             warnings?: string | null;
             /** Next Step */
-            next_step?: ("rien" | "entretien" | "reponse" | "test") | null;
+            next_step?: ("rien" | "entretien" | "reponse" | "test" | "refus") | null;
             /** Next Step At */
             next_step_at?: string | null;
             /** Thanks */
             thanks?: ("sent" | "no" | "todo") | null;
             /** Employer Feedback */
             employer_feedback?: string | null;
+            /** Feeling */
+            feeling?: ("bien" | "moyen" | "pas_bien") | null;
+            /** Notes */
+            notes?: string | null;
             /** Id */
             id: number;
             /** Application Id */
@@ -4750,7 +4800,7 @@ export interface components {
             /** Outlook */
             outlook: ("positive" | "unsure" | "negative") | null;
             /** Next Step */
-            next_step: ("rien" | "entretien" | "reponse" | "test") | null;
+            next_step: ("rien" | "entretien" | "reponse" | "test" | "refus") | null;
             /** Next Step At */
             next_step_at: string | null;
             /** Thanks Sent */
@@ -4785,6 +4835,11 @@ export interface components {
             error?: string | null;
             /** User */
             user?: string | null;
+        };
+        /** Body_readManualOfferFile */
+        Body_readManualOfferFile: {
+            /** File */
+            file: string;
         };
         /** Body_readManualOfferPdf */
         Body_readManualOfferPdf: {
@@ -5149,7 +5204,7 @@ export interface components {
              * @default linkedin_invite
              * @enum {string}
              */
-            channel: "linkedin_invite" | "linkedin_message" | "email" | "phone" | "other";
+            channel: "linkedin_invite" | "linkedin_message" | "email" | "phone" | "in_person" | "other";
             /**
              * Contacted On
              * Format: date
@@ -5179,7 +5234,7 @@ export interface components {
              * Channel
              * @enum {string}
              */
-            channel: "linkedin_invite" | "linkedin_message" | "email" | "phone" | "other";
+            channel: "linkedin_invite" | "linkedin_message" | "email" | "phone" | "in_person" | "other";
             /**
              * Contacted On
              * Format: date
@@ -5561,6 +5616,49 @@ export interface components {
             offers: number;
             /** Applications */
             applications: number;
+        };
+        /**
+         * DebriefIn
+         * @description Les trois réponses de la page : le ressenti (obligatoire), la suite et les notes.
+         */
+        DebriefIn: {
+            /**
+             * Feeling
+             * @enum {string}
+             */
+            feeling: "bien" | "moyen" | "pas_bien";
+            /** Next Step */
+            next_step?: ("reponse" | "entretien" | "refus") | null;
+            /** Notes */
+            notes?: string | null;
+        };
+        /**
+         * DebriefOut
+         * @description L'entretien (carte du haut), les réponses déjà données et la relance calculée.
+         */
+        DebriefOut: {
+            /** Application Id */
+            application_id: number;
+            /** Company */
+            company: string;
+            /** Job Title */
+            job_title: string;
+            /**
+             * Interview At
+             * Format: date-time
+             */
+            interview_at: string;
+            /** Feeling */
+            feeling: ("bien" | "moyen" | "pas_bien") | null;
+            /** Next Step */
+            next_step: string | null;
+            /** Notes */
+            notes: string | null;
+            /**
+             * Follow Up On
+             * Format: date
+             */
+            follow_up_on: string;
         };
         /** DelayOut */
         DelayOut: {
@@ -6359,7 +6457,8 @@ export interface components {
         };
         /**
          * InterviewIn
-         * @description Toutes les réponses sont facultatives, sauf le ressenti global (docs/23 §2).
+         * @description Toutes les réponses sont facultatives, sauf le ressenti global (docs/23 §2). Un retour fait
+         *     par « Faire le point » n'a qu'un ressenti en trois mots : il peut garder sa note vide.
          */
         InterviewIn: {
             /** Kind */
@@ -6375,7 +6474,7 @@ export interface components {
             /** People Count */
             people_count?: number | null;
             /** Rating */
-            rating: number;
+            rating?: number | null;
             /** Stress */
             stress?: number | null;
             /** Interest */
@@ -6403,7 +6502,7 @@ export interface components {
             /** Warnings */
             warnings?: string | null;
             /** Next Step */
-            next_step?: ("rien" | "entretien" | "reponse" | "test") | null;
+            next_step?: ("rien" | "entretien" | "reponse" | "test" | "refus") | null;
             /** Next Step At */
             next_step_at?: string | null;
             /** Thanks */
@@ -6431,6 +6530,8 @@ export interface components {
             state: "upcoming" | "rejected" | "rated" | "done";
             /** Rating */
             rating?: number | null;
+            /** Feeling */
+            feeling?: ("bien" | "moyen" | "pas_bien") | null;
         };
         /** InterviewOut */
         InterviewOut: {
@@ -6447,7 +6548,7 @@ export interface components {
             /** People Count */
             people_count?: number | null;
             /** Rating */
-            rating: number;
+            rating?: number | null;
             /** Stress */
             stress?: number | null;
             /** Interest */
@@ -6475,13 +6576,17 @@ export interface components {
             /** Warnings */
             warnings?: string | null;
             /** Next Step */
-            next_step?: ("rien" | "entretien" | "reponse" | "test") | null;
+            next_step?: ("rien" | "entretien" | "reponse" | "test" | "refus") | null;
             /** Next Step At */
             next_step_at?: string | null;
             /** Thanks */
             thanks?: ("sent" | "no" | "todo") | null;
             /** Employer Feedback */
             employer_feedback?: string | null;
+            /** Feeling */
+            feeling?: ("bien" | "moyen" | "pas_bien") | null;
+            /** Notes */
+            notes?: string | null;
             /** Id */
             id: number;
             /** Application Id */
@@ -6992,6 +7097,15 @@ export interface components {
             /** Existing Added */
             existing_added?: string | null;
         };
+        /** ManualFileOut */
+        ManualFileOut: {
+            /** Text */
+            text?: string | null;
+            /** Problem */
+            problem?: ("no-text" | "too-big" | "not-supported" | "unreadable" | "ai-off" | "ai-down" | "budget") | null;
+            /** Limit */
+            limit?: string | null;
+        };
         /** ManualPdfOut */
         ManualPdfOut: {
             /** Text */
@@ -7259,8 +7373,8 @@ export interface components {
          * NearFacets
          * @description Les nombres des choix sans les offres « Loin » (note sous FAR_BELOW), que le téléphone
          *     cache tant qu'on ne les montre pas : Statut (« pending », « to_review », « later »,
-         *     « in_progress »), Type de note, Taux et Contrat. Le choix actif égale alors « Afficher n
-         *     offres ».
+         *     « in_progress »), Type de note, Taux, Contrat et Distance. Le choix actif égale alors
+         *     « Afficher n offres ».
          */
         NearFacets: {
             /** Views */
@@ -7276,6 +7390,11 @@ export interface components {
              * @default []
              */
             contracts: components["schemas"]["Facet"][];
+            /**
+             * Distances
+             * @default []
+             */
+            distances: components["schemas"]["Facet"][];
         };
         /**
          * NewsPreferences
@@ -7434,6 +7553,13 @@ export interface components {
              */
             contracts: components["schemas"]["Facet"][];
             near?: components["schemas"]["NearFacets"] | null;
+            /** Distance From */
+            distance_from?: string | null;
+            /**
+             * Distances
+             * @default []
+             */
+            distances: components["schemas"]["Facet"][];
         };
         /** OfferFileOut */
         OfferFileOut: {
@@ -8253,6 +8379,8 @@ export interface components {
              * @default false
              */
             checked: boolean;
+            /** Removed */
+            removed?: boolean | null;
         };
         /** QuestionStatOut */
         QuestionStatOut: {
@@ -12053,6 +12181,46 @@ export interface operations {
             };
         };
     };
+    readManualOfferFile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_readManualOfferFile"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ManualFileOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+            /** @description Trop de fichiers : « Réessaie dans n minutes » */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     unfillManualOffer: {
         parameters: {
             query?: never;
@@ -12574,6 +12742,7 @@ export interface operations {
                 with_expired?: boolean;
                 basis?: ("sure" | "provisional") | null;
                 contracts?: components["schemas"]["Contract"][];
+                distance?: ("15" | "30" | "50" | "unknown") | null;
                 hide_far?: boolean;
             };
             header?: never;
@@ -17485,6 +17654,72 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getDebrief: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                application_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebriefOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    saveDebrief: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                application_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DebriefIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebriefOut"];
+                };
             };
             /** @description Validation Error */
             422: {

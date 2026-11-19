@@ -20,6 +20,9 @@ from jobbot.llm.common import SONNET, call, check_budget, clean, parse_reponse
 from jobbot.runtime import Runtime
 from jobbot.scoring.service import active_profile
 
+# Le ressenti de « Faire le point » (planche FairePoint), en mots.
+FEELINGS = {"bien": "bien", "moyen": "moyen", "pas_bien": "pas bien"}
+
 PREPARED_KEY = "interview_prepared"
 COACH_KEY = "interview_coaching"
 # Points « à préparer » ajoutés depuis le retour d'un entraînement (docs/75 §7).
@@ -74,7 +77,9 @@ async def insights(session: AsyncSession) -> Insights:
         done = await _prepared(session)
         result.to_prepare = [(t, normalize_text(t) in done) for t in await _extra(session)]
         return result
-    result.average_rating = round(sum(i.rating for i, _ in rows) / len(rows), 1)
+    # La moyenne des notes sur 5 ; un point fait par « Faire le point » n'en a pas (0097).
+    ratings = [i.rating for i, _ in rows if i.rating is not None]
+    result.average_rating = round(sum(ratings) / len(ratings), 1) if ratings else None
     stats: dict[str, QuestionStat] = {}
     prepare: dict[str, str] = {}
     # Libellé d'une question : celui de sa première apparition (entretiens du plus ancien).
@@ -211,7 +216,13 @@ async def _context(session: AsyncSession, application_id: int | None) -> tuple[s
     notes = []
     for i, job in rows:
         difficult = [q.get("text") for q in i.questions or [] if q.get("difficult")]
-        parts = [f"Poste : {job}", f"type : {i.kind or '?'}", f"ressenti {i.rating}/5"]
+        parts = [
+            f"Poste : {job}",
+            f"type : {i.kind or '?'}",
+            f"ressenti {i.rating}/5"
+            if i.rating is not None
+            else f"ressenti : {FEELINGS.get(i.feeling or '', '?')}",
+        ]
         if difficult:
             parts.append("questions difficiles : " + " ; ".join(str(q) for q in difficult))
         for label, value in (

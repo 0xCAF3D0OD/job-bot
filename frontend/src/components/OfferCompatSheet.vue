@@ -93,8 +93,11 @@ const parts = computed(() => props.parts ?? []);
 const barTone = (part: ScorePart): string => (part.points >= part.max ? "full" : part.check ? "check" : "partial");
 const width = (part: ScorePart): string => `${Math.round((100 * Math.min(part.points, part.max)) / part.max)}%`;
 const source = computed(() => (props.provisional ? "l’extrait de l’alerte" : "l’annonce complète"));
+// « Calculée le 9 novembre, sans âge ni nationalité. » (§72k du 18.11) ; une note provisoire garde sa source.
 const foot = computed(() =>
-  props.scoredAt ? `Calculée ${dateInSentence(props.scoredAt)} sur ${source.value}.` : "",
+  props.scoredAt
+    ? `Calculée ${dateInSentence(props.scoredAt)}${props.provisional ? ` sur ${source.value}` : ""}, sans âge ni nationalité.`
+    : "Sans âge ni nationalité.",
 );
 const hasHow = computed(() => parts.value.length > 0 || props.how.length > 0);
 const families = computed(() =>
@@ -186,7 +189,7 @@ const families = computed(() =>
       >
         <template v-if="parts.length">
           <p class="compat-calc-intro">
-            jobA1 compare {{ source }} à ton profil. Chaque partie vaut un nombre de points, le total fait la note sur 100.
+            Chaque partie vaut des points, le total fait la note sur 100.
           </p>
           <ul
             class="compat-parts"
@@ -253,7 +256,7 @@ const families = computed(() =>
           class="compat-calc-foot"
           data-test="compat-calc-foot"
         >
-          {{ foot }} jobA1 ne lit pas d’informations personnelles comme l’âge ou la nationalité.
+          {{ foot }}
         </p>
       </div>
     </template>

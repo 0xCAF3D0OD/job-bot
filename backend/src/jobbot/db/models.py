@@ -12,6 +12,7 @@ from sqlalchemy import (
     ColumnElement,
     Date,
     DateTime,
+    Double,
     ForeignKey,
     ForeignKeyConstraint,
     Integer,
@@ -29,6 +30,7 @@ from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from jobbot.core.contract import Contract, classify_contract
+from jobbot.core.geo import locate
 from jobbot.db.base import Base
 
 # Compte de la ligne (docs/65) : tiré du compte en cours ; la base ne montre que les siennes.
@@ -203,6 +205,10 @@ class Offer(Base):
     enrich_status: Mapped[str] = mapped_column(Text, default="pending")
     # Canton (« VD »), déduit du lieu ou appris des autres offres de la même ville.
     canton: Mapped[str | None] = mapped_column(Text, index=True)
+    # Filtre « Distance depuis… » (issue #468) : le point du lieu (jobbot.core.geo, numéros postaux
+    # GeoNames), vide quand le lieu n'est pas reconnu sans ambiguïté (« Lieu non précisé »).
+    latitude: Mapped[float | None] = mapped_column(Double)
+    longitude: Mapped[float | None] = mapped_column(Double)
     enrich_attempts: Mapped[int] = mapped_column(default=0)
     enriched_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     # Lecture automatique de l'annonce complète (prompt du 10 novembre, PR 13) : NULL à faire,
@@ -272,6 +278,14 @@ def _classify_contract(offer: Offer, value: object, _old: object, _initiator: ob
     """Filtre « Contrat » : une offre créée ou modifiée par l'ORM garde sa catégorie à jour. Une
     mise à jour en masse (`update(Offer)`, enrich) passe `contract` elle-même."""
     offer.contract = classify_contract(value if isinstance(value, str) else None)
+
+
+@event.listens_for(Offer.location, "set")
+def _locate(offer: Offer, value: object, _old: object, _initiator: object) -> None:
+    """Filtre « Distance » : une offre créée ou modifiée par l'ORM garde son point à jour. Un
+    `insert(Offer)` (la collecte) passe `latitude` et `longitude` lui-même."""
+    point = locate(value if isinstance(value, str) else None)
+    offer.latitude, offer.longitude = (point.lat, point.lon) if point else (None, None)
 
 
 class OfferLink(Base):
@@ -590,6 +604,8 @@ class ApplicationMethod(StrEnum):
 class ApplicationStatus(StrEnum):
     EN_ATTENTE = "en_attente"
     RELANCEE = "relancee"
+    # L'employeur a répondu, sans entretien ni refus (Kevin, 18.11.2026, migration 0096).
+    REPONSE = "reponse"
     ENTRETIEN = "entretien"
     REFUS = "refus"
     ENGAGEMENT = "engagement"
@@ -1147,6 +1163,14 @@ class Interview(Base):
     """Retour d'entretien (docs/23) : déroulé, ressenti, questions, enseignements, suite."""
 
     __tablename__ = "interviews"
+    __table_args__ = (
+        CheckConstraint(
+            "feeling in ('bien', 'moyen', 'pas_bien')", name="interviews_feeling_values"
+        ),
+        CheckConstraint(
+            "feeling is not null or rating is not null", name="interviews_feeling_or_rating"
+        ),
+    )
 
     user_id: Mapped[int] = account_column()
 
@@ -1160,7 +1184,11 @@ class Interview(Base):
     duration: Mapped[str | None] = mapped_column(Text)
     interviewers: Mapped[Any] = mapped_column(JSONB, nullable=False, default=list)
     people_count: Mapped[int | None] = mapped_column(SmallInteger)
-    rating: Mapped[int] = mapped_column(SmallInteger)
+    # Note sur 5 du formulaire complet ; facultative depuis « Faire le point » (0097), qui demande
+    # seulement le ressenti en trois mots (`feeling`). Au moins l'un des deux.
+    rating: Mapped[int | None] = mapped_column(SmallInteger)
+    feeling: Mapped[str | None] = mapped_column(Text)
+    notes: Mapped[str | None] = mapped_column(Text)
     stress: Mapped[int | None] = mapped_column(SmallInteger)
     interest: Mapped[str | None] = mapped_column(Text)
     outlook: Mapped[str | None] = mapped_column(Text)
@@ -1396,7 +1424,7 @@ class Contact(Base):
     )
     name: Mapped[str | None] = mapped_column(Text)
     role: Mapped[str] = mapped_column(Text)  # recruiter | manager | team | alumni | other
-    # linkedin_invite | linkedin_message | email | phone | other
+    # linkedin_invite | linkedin_message | email | phone | in_person | other
     channel: Mapped[str] = mapped_column(Text)
     contacted_on: Mapped[date] = mapped_column(Date)
     answered_on: Mapped[date | None] = mapped_column(Date)

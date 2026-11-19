@@ -2887,6 +2887,51 @@
         }
       }
     },
+    "/api/offers/manual/file": {
+      "post": {
+        "tags": [
+          "offers"
+        ],
+        "summary": "Read File",
+        "description": "« Capture ou PDF » dans « Ajouter une offre » (§72 du 18.11, planche AjouterOffreTel) :\nun PDF lu sans IA, ou une capture PNG ou JPG recopiée par l'IA, avec la même règle que sur la\nfiche (Q1 du 17.11) : un fichier à la fois, 5 Mo au plus, 20 par heure (partagés avec le PDF),\nune formule épuisée refuse la capture avant tout appel. Le fichier n'est ni rangé ni journalisé\n(E-5, J-1) ; rien n'est créé ici.",
+        "operationId": "readManualOfferFile",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_readManualOfferFile"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManualFileOut"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Trop de fichiers : « Réessaie dans n minutes »"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/offers/manual/{offer_id}/unfill": {
       "post": {
         "tags": [
@@ -3888,6 +3933,28 @@
               "maxItems": 5,
               "default": [],
               "title": "Contracts"
+            }
+          },
+          {
+            "name": "distance",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "15",
+                    "30",
+                    "50",
+                    "unknown"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Distance"
             }
           },
           {
@@ -10172,6 +10239,99 @@
         }
       }
     },
+    "/api/applications/{application_id}/debrief": {
+      "get": {
+        "tags": [
+          "interviews"
+        ],
+        "summary": "Get Debrief",
+        "operationId": "getDebrief",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Application Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DebriefOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "interviews"
+        ],
+        "summary": "Save Debrief",
+        "description": "Enregistre le point sur l'entretien du jour prévu : crée le retour, ou complète celui de ce\njour (sa note sur 5 et ses autres réponses restent). Aucune IA, le statut ne change pas.",
+        "operationId": "saveDebrief",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Application Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DebriefIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DebriefOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/interviews/insights": {
       "get": {
         "tags": [
@@ -11274,6 +11434,7 @@
             "enum": [
               "received",
               "created",
+              "pending",
               "todo"
             ],
             "title": "Status"
@@ -12395,6 +12556,7 @@
         "enum": [
           "en_attente",
           "relancee",
+          "reponse",
           "entretien",
           "refus",
           "engagement",
@@ -12955,9 +13117,16 @@
             "title": "People Count"
           },
           "rating": {
-            "type": "integer",
-            "maximum": 5.0,
-            "minimum": 1.0,
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 5.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Rating"
           },
           "stress": {
@@ -13126,7 +13295,8 @@
                   "rien",
                   "entretien",
                   "reponse",
-                  "test"
+                  "test",
+                  "refus"
                 ]
               },
               {
@@ -13175,6 +13345,33 @@
             ],
             "title": "Employer Feedback"
           },
+          "feeling": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "bien",
+                  "moyen",
+                  "pas_bien"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feeling"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
           "id": {
             "type": "integer",
             "title": "Id"
@@ -13222,7 +13419,6 @@
         },
         "type": "object",
         "required": [
-          "rating",
           "id",
           "application_id",
           "created_at",
@@ -13329,7 +13525,8 @@
                   "rien",
                   "entretien",
                   "reponse",
-                  "test"
+                  "test",
+                  "refus"
                 ]
               },
               {
@@ -13478,6 +13675,20 @@
         },
         "type": "object",
         "title": "Body_oauthCallbackForm"
+      },
+      "Body_readManualOfferFile": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_readManualOfferFile"
       },
       "Body_readManualOfferPdf": {
         "properties": {
@@ -14527,6 +14738,7 @@
               "linkedin_message",
               "email",
               "phone",
+              "in_person",
               "other"
             ],
             "title": "Channel",
@@ -14625,6 +14837,7 @@
               "linkedin_message",
               "email",
               "phone",
+              "in_person",
               "other"
             ],
             "title": "Channel"
@@ -15765,6 +15978,130 @@
         ],
         "title": "DayActivity",
         "description": "Un jour de la semaine en tableau de bord (docs/54 §5)."
+      },
+      "DebriefIn": {
+        "properties": {
+          "feeling": {
+            "type": "string",
+            "enum": [
+              "bien",
+              "moyen",
+              "pas_bien"
+            ],
+            "title": "Feeling"
+          },
+          "next_step": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "reponse",
+                  "entretien",
+                  "refus"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Step"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "feeling"
+        ],
+        "title": "DebriefIn",
+        "description": "Les trois réponses de la page : le ressenti (obligatoire), la suite et les notes."
+      },
+      "DebriefOut": {
+        "properties": {
+          "application_id": {
+            "type": "integer",
+            "title": "Application Id"
+          },
+          "company": {
+            "type": "string",
+            "title": "Company"
+          },
+          "job_title": {
+            "type": "string",
+            "title": "Job Title"
+          },
+          "interview_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Interview At"
+          },
+          "feeling": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "bien",
+                  "moyen",
+                  "pas_bien"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feeling"
+          },
+          "next_step": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Step"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "follow_up_on": {
+            "type": "string",
+            "format": "date",
+            "title": "Follow Up On"
+          }
+        },
+        "type": "object",
+        "required": [
+          "application_id",
+          "company",
+          "job_title",
+          "interview_at",
+          "feeling",
+          "next_step",
+          "notes",
+          "follow_up_on"
+        ],
+        "title": "DebriefOut",
+        "description": "L'entretien (carte du haut), les réponses déjà données et la relance calculée."
       },
       "DelayOut": {
         "properties": {
@@ -18188,9 +18525,16 @@
             "title": "People Count"
           },
           "rating": {
-            "type": "integer",
-            "maximum": 5.0,
-            "minimum": 1.0,
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 5.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Rating"
           },
           "stress": {
@@ -18359,7 +18703,8 @@
                   "rien",
                   "entretien",
                   "reponse",
-                  "test"
+                  "test",
+                  "refus"
                 ]
               },
               {
@@ -18410,11 +18755,8 @@
           }
         },
         "type": "object",
-        "required": [
-          "rating"
-        ],
         "title": "InterviewIn",
-        "description": "Toutes les réponses sont facultatives, sauf le ressenti global (docs/23 §2)."
+        "description": "Toutes les réponses sont facultatives, sauf le ressenti global (docs/23 §2). Un retour fait\npar « Faire le point » n'a qu'un ressenti en trois mots : il peut garder sa note vide."
       },
       "InterviewLineOut": {
         "properties": {
@@ -18462,6 +18804,22 @@
               }
             ],
             "title": "Rating"
+          },
+          "feeling": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "bien",
+                  "moyen",
+                  "pas_bien"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feeling"
           }
         },
         "type": "object",
@@ -18567,9 +18925,16 @@
             "title": "People Count"
           },
           "rating": {
-            "type": "integer",
-            "maximum": 5.0,
-            "minimum": 1.0,
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 5.0,
+                "minimum": 1.0
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Rating"
           },
           "stress": {
@@ -18738,7 +19103,8 @@
                   "rien",
                   "entretien",
                   "reponse",
-                  "test"
+                  "test",
+                  "refus"
                 ]
               },
               {
@@ -18787,6 +19153,33 @@
             ],
             "title": "Employer Feedback"
           },
+          "feeling": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "bien",
+                  "moyen",
+                  "pas_bien"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feeling"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
           "id": {
             "type": "integer",
             "title": "Id"
@@ -18808,7 +19201,6 @@
         },
         "type": "object",
         "required": [
-          "rating",
           "id",
           "application_id",
           "created_at",
@@ -20219,6 +20611,54 @@
         ],
         "title": "ManualDraft"
       },
+      "ManualFileOut": {
+        "properties": {
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          },
+          "problem": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "no-text",
+                  "too-big",
+                  "not-supported",
+                  "unreadable",
+                  "ai-off",
+                  "ai-down",
+                  "budget"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Problem"
+          },
+          "limit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit"
+          }
+        },
+        "type": "object",
+        "title": "ManualFileOut"
+      },
       "ManualPdfOut": {
         "properties": {
           "text": {
@@ -21114,6 +21554,14 @@
             "type": "array",
             "title": "Contracts",
             "default": []
+          },
+          "distances": {
+            "items": {
+              "$ref": "#/components/schemas/Facet"
+            },
+            "type": "array",
+            "title": "Distances",
+            "default": []
           }
         },
         "type": "object",
@@ -21124,7 +21572,7 @@
           "rates"
         ],
         "title": "NearFacets",
-        "description": "Les nombres des choix sans les offres « Loin » (note sous FAR_BELOW), que le téléphone\ncache tant qu'on ne les montre pas : Statut (« pending », « to_review », « later »,\n« in_progress »), Type de note, Taux et Contrat. Le choix actif égale alors « Afficher n\noffres »."
+        "description": "Les nombres des choix sans les offres « Loin » (note sous FAR_BELOW), que le téléphone\ncache tant qu'on ne les montre pas : Statut (« pending », « to_review », « later »,\n« in_progress »), Type de note, Taux, Contrat et Distance. Le choix actif égale alors\n« Afficher n offres »."
       },
       "NewsPreferences": {
         "properties": {
@@ -21560,6 +22008,25 @@
                 "type": "null"
               }
             ]
+          },
+          "distance_from": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distance From"
+          },
+          "distances": {
+            "items": {
+              "$ref": "#/components/schemas/Facet"
+            },
+            "type": "array",
+            "title": "Distances",
+            "default": []
           }
         },
         "type": "object",
@@ -24019,6 +24486,17 @@
             "type": "boolean",
             "title": "Checked",
             "default": false
+          },
+          "removed": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Removed"
           }
         },
         "type": "object",

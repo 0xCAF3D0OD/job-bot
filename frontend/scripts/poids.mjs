@@ -41,6 +41,7 @@ export const LIMITS = {
   "js-candidatures-autres-offres": 175_500, // « Autres offres chez … » (planche Offre, 18.11), chargé à part : la limite de Candidatures
   "js-candidatures-menu": 175_500, // la feuille « ⋯ » de la fiche (téléphone), chargée à la demande : la limite de Candidatures
   "js-candidatures-compatibilite": 175_500, // la feuille de la compatibilité, chargée à la demande : la limite de Candidatures
+  "js-candidatures-ajout": 175_500, // les formulaires du panneau « Ajouter », chargés à part : la limite de Candidatures
   "js-preparer": 157_400,
   "js-preparer-panneaux": 157_400,
   "js-suivi": 176_800,
@@ -54,6 +55,7 @@ export const LIMITS = {
   "js-formations": 117_500,
   "js-fiche-orp": 98_200,
   "js-entrainement": 99_900,
+  "js-faire-le-point": 84_100, // nouvelle page (18.11) : sa mesure + 5 %, même règle que les autres
   "js-notifications": 98_500,
   "js-compte": 97_500,
   "js-profil": 135_800,
@@ -86,6 +88,7 @@ export const LIMITS = {
   "css-candidatures-autres-offres": 72_500, // « Autres offres chez … » (planche Offre, 18.11), chargé à part : la limite de Candidatures
   "css-candidatures-menu": 72_500, // la feuille « ⋯ » de la fiche (téléphone), chargée à la demande : la limite de Candidatures
   "css-candidatures-compatibilite": 72_500, // la feuille de la compatibilité, chargée à la demande : la limite de Candidatures
+  "css-candidatures-ajout": 72_500, // les formulaires du panneau « Ajouter », chargés à part : la limite de Candidatures
   "css-preparer": 70_500,
   "css-preparer-panneaux": 70_500,
   "css-suivi": 73_600,
@@ -99,6 +102,7 @@ export const LIMITS = {
   "css-formations": 60_900,
   "css-fiche-orp": 61_500,
   "css-entrainement": 61_000,
+  "css-faire-le-point": 54_300,
   "css-notifications": 62_200,
   "css-compte": 60_300,
   "css-profil": 64_300,
@@ -149,6 +153,9 @@ export const PAGES = {
   "candidatures-autres-offres": ["views/JobsView.vue", "views/OffersView.vue", "components/CompanyOffers.vue"],
   "candidatures-compatibilite": ["views/JobsView.vue", "views/OffersView.vue", "components/OfferCompatSheet.vue"],
   "candidatures-menu": ["views/JobsView.vue", "views/OffersView.vue", "components/OfferActionSheet.vue"],
+  // Les formulaires du panneau « Ajouter » (une offre, une candidature spontanée), chargés à part et préchargés dès
+  // l'affichage de la page (même règle que la compatibilité), mesurés avec la page sous les limites de Candidatures.
+  "candidatures-ajout": ["views/JobsView.vue", "views/OffersView.vue", "components/addForms.ts"],
   preparer: ["views/PreparationView.vue"],
   // Préparer avec l'étape CV et tous ses panneaux chargés à la demande ouverts (allègement (c), issue #797) : le pire cas garde les
   // limites de Préparer d'avant l'allègement, pour qu'ouvrir un panneau ne coûte jamais plus qu'avant.
@@ -178,6 +185,8 @@ export const PAGES = {
   formations: ["views/BilanView.vue", "views/TrainingsView.vue"],
   "fiche-orp": ["views/OrpFicheView.vue"],
   entrainement: ["views/PracticeView.vue"],
+  // « Faire le point » en page entière (planche FairePoint, accord de Kevin du 18.11.2026).
+  "faire-le-point": ["views/FairePointView.vue"],
   notifications: ["views/NotificationsView.vue"],
   compte: ["views/AccountView.vue"],
   // Profil avec la lecture du CV en cours (§53) : les étapes de ChargementCV, chargées seulement pendant la lecture.

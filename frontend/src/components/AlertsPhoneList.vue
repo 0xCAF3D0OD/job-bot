@@ -14,6 +14,8 @@ import "../blocks.css";
 // (« À confirmer », « Actives », « À créer » ; une famille vide n'est pas affichée), puis « + Ajouter une recherche ».
 // La carte ouvre la feuille « Alerte » : le rappel, « La recherche » (lieux, site), puis selon l'état confirmer,
 // créer, ou les actions ; « Ne plus suivre cette recherche » partout.
+// Une alerte déclarée créée dont le site n'a encore rien écrit (état « pending », Kevin, 18.11) va dans « À confirmer »,
+// avec « Coller le code » (jobup) : le panneau de création, où le code s'affiche.
 // `desk` (maquette AlertesOrdinateur du 9 novembre, §2.8) : la même liste sur ordinateur ; « lieux · site » sous le
 // titre, le mot d'état à droite en couleur, « + Ajouter une recherche » dans l'en-tête de la page ; la feuille devient
 // le panneau de droite (`al`, `cf`), et la note sur le filtre Gmail ferme la liste
@@ -41,6 +43,7 @@ const STATE_WORD: Record<SiteState["kind"], (label: string) => string> = {
   received: (label) => label.charAt(0).toLowerCase() + label.slice(1),
   quiet: (label) => label,
   waiting: () => "en attente du premier envoi",
+  pending: () => "à confirmer",
   silent: () => "rien reçu depuis la création",
   todo: () => "pas encore créée",
 };
@@ -51,7 +54,7 @@ const cards = computed<Card[]>(() =>
     .flatMap((group) =>
       group.sites.map((site) => {
         const confirm = props.page.to_confirm?.find((c) => c.site === site.slug && group.ids.includes(c.search_id)) ?? null;
-        const kind: Kind = confirm ? "confirm" : site.state.kind === "todo" ? "todo" : "active";
+        const kind: Kind = confirm || site.state.kind === "pending" ? "confirm" : site.state.kind === "todo" ? "todo" : "active";
         return { key: `${group.terms}-${site.slug}`, group, site, kind, places: group.locations.join(", ") || "Toute la Suisse", confirm };
       }),
     ),
@@ -60,16 +63,17 @@ const DESK_WORD: Record<SiteState["kind"], (label: string) => string> = {
   received: (label) => label,
   quiet: (label) => label,
   waiting: () => "En attente du premier envoi",
+  pending: () => "À confirmer",
   silent: () => "Rien reçu depuis la création",
   todo: () => "Pas encore créée",
 };
 function aside(card: Card): { text: string; tone: "todo" | "plain" | "muted" } {
-  if (card.kind === "confirm") return { text: "Confirmation demandée", tone: "todo" };
+  if (card.kind === "confirm") return { text: card.confirm ? "Confirmation demandée" : DESK_WORD.pending(""), tone: "todo" };
   if (card.kind === "todo") return { text: DESK_WORD.todo(""), tone: "muted" };
   return { text: DESK_WORD[card.site.state.kind](card.site.state.label), tone: card.site.state.kind === "silent" ? "todo" : "plain" };
 }
 const status = (card: Card) =>
-  `${card.site.name} · ${card.kind === "confirm" ? "confirmation demandée" : STATE_WORD[card.site.state.kind](card.site.state.label)}`;
+  `${card.site.name} · ${card.kind === "confirm" && card.confirm ? "confirmation demandée" : STATE_WORD[card.site.state.kind](card.site.state.label)}`;
 
 const confirmNames = computed(() => [...new Set(cards.value.filter((c) => c.kind === "confirm").map((c) => c.site.name))]);
 const families = computed(() =>
@@ -220,7 +224,7 @@ function remove(): void {
       </section>
       <template v-if="shown.kind === 'confirm' && shown.confirm">
         <p class="sheet-note">
-          {{ shown.site.name }} a envoyé un e-mail de confirmation. Tant que tu ne confirmes pas, aucune offre n’arrive.
+          Aucune offre n’arrive tant que tu ne confirmes pas.
         </p>
         <a
           class="sheet-cta"
@@ -230,6 +234,22 @@ function remove(): void {
           data-test="alert-confirm"
           @click="confirm"
         >Confirmer sur {{ shown.site.name }}<AppIcon name="external" /><span class="visually-hidden"> (nouvel onglet)</span></a>
+      </template>
+      <template v-else-if="shown.kind === 'confirm'">
+        <p
+          class="sheet-note"
+          data-test="alert-pending-note"
+        >
+          jobA1 n’a encore reçu aucun e-mail de {{ shown.site.name }} : l’alerte n’est pas encore finie. Tant qu’elle ne l’est pas, aucune offre n’arrive.
+        </p>
+        <button
+          type="button"
+          class="sheet-cta alert-sheet-cta"
+          data-test="alert-finish"
+          @click="create"
+        >
+          {{ shown.site.slug === "jobup" ? "Coller le code" : `Finir l’alerte sur ${shown.site.name}` }}
+        </button>
       </template>
       <template v-else-if="shown.kind === 'todo'">
         <p class="sheet-note">
@@ -298,7 +318,7 @@ function remove(): void {
     class="alerts-desk-note"
     data-test="alerts-note"
   >
-    jobA1 lit seulement les e-mails d’alerte transférés par ton filtre Gmail. Les autres sont supprimés à la réception.
+    jobA1 lit seulement les e-mails d’alerte reçus sur ton adresse jobA1.
   </p>
 </template>
 
