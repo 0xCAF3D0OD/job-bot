@@ -160,8 +160,8 @@ describe("CvPanel sur téléphone (maquette Preparer)", () => {
     expect(sheet().get(".sheet-title").text()).toBe("Profil");
     expect(sheet().get("[data-test=cv-why]").text()).toBe("Pourquoi : L’annonce demande AWS dès sa première ligne.");
     expect(sheet().findAll(".cv-why-quote").map((m) => m.text())).toEqual(["AWS"]);
-    // Le résumé s'annule aussi (Kevin, 19.11).
-    expect(sheet().find("[data-test=cv-change-undo]").exists()).toBe(true);
+    // Le résumé ne s'annule pas (pas d'« avant » gardé).
+    expect(sheet().find("[data-test=cv-change-undo]").exists()).toBe(false);
     await sheet().get("[data-test=cv-change-next]").trigger("click");
     expect(sheet().get("[data-test=sheet-eyebrow]").text()).toBe("Changement 2 sur 2");
     expect(sheet().get(".sheet-title").text()).toBe("Stage web");
