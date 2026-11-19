@@ -778,3 +778,7 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.564 | Fiche « Pour l'ORP » : plus de phrase « Elle passe dans « Recherches du mois » » sous « Marquer comme déclarée » (§72g) | livrée |
 | 1.6.565 | Candidatures vides avec alertes : plus de phrase « jobA1 récupère les nouvelles offres… » sous le titre (§72g) | livrée |
 | 1.6.566 | Trier, rien à trier : « Gérer mes alertes » devient un bouton texte, un seul bouton plein par écran (§72e). | livrée |
+| 1.6.567 | Barre du bas du téléphone conforme aux planches : plus de pastille sur Candidatures, courbe montante pour Bilan, le fond de la page sous l'encoche | livrée |
+| 1.6.568 | Statut de candidature « Réponse reçue » (choisi à la main) et filtres des Envoyées : Toutes, À relancer, Envoyée, Réponse reçue, Entretien, Refusée | livrée |
+| 1.6.569 | Migrations : la distance des offres passe en 0095, après la 0094 des premiers pas, pour qu'il n'y ait plus deux têtes sur main | livrée |
+| 1.6.570 | Candidatures plus légère : les formulaires du panneau « Ajouter » se chargent à part, préchargés dès l'affichage de la page (la page repasse sous sa limite après Distance). | livrée |
