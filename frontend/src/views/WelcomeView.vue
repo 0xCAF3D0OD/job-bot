@@ -1695,7 +1695,8 @@ async function finish(to: string): Promise<void> {
 .wdk-bars span.current { width: var(--wdk-bar-on); }
 .wdk-grid { box-sizing: border-box; display: grid; grid-template-columns: minmax(0, var(--wdk-col)) var(--wdk-scene); column-gap: var(--wdk-gap); justify-content: space-between; width: min(var(--wdk-w), 100% - 2 * var(--space-6)); margin: 0 auto; padding-top: var(--wdk-40); }
 .wdk-col { display: flex; flex-direction: column; min-width: 0; }
-.wdk-cap { margin: 0; font-size: var(--wdk-13); line-height: var(--wdk-16); font-weight: var(--weight-bold); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-secondary); }
+/* Le surtitre des planches OnboardingOrdinateur* (.cap, planches_72_a_72k) : 15/16, gras, à l’encre, sans capitales. */
+.wdk-cap { --wdk-15: 15px; margin: 0; font-size: var(--wdk-15); line-height: var(--wdk-16); font-weight: var(--weight-bold); color: var(--text); }
 .wdk-title { margin: var(--space-3) 0 0; font-size: var(--wdk-40); line-height: var(--wdk-48); font-weight: var(--weight-heavy); letter-spacing: -0.4px; }
 .wdk-title:focus { outline: none; }
 .wdk-title .welcome-hand { margin: 0; font-size: 1.45em; line-height: var(--leading-none); color: var(--primary-graphic); transform: none; animation: none; }
