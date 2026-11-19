@@ -1302,9 +1302,23 @@ Amende [la décision K5 du 17.11](2026-11-17-2150-offre-reste-en-place.md) (une 
 4. Même comportement pour « Écarter N offres » de la sélection multiple : les N cartes sortent ensemble, avec un seul message.
 5. Rien ne change côté serveur.
 
+## Le poids des PR contrôlé avant la fusion, pas après sur main
+
+Kevin, 19.11.2026, 14 h 36, après que #928 puis #930, vertes chacune, ont fait dépasser Préparer sur main (main rouge,
+`make deploy` bloqué) : « ajoute à la CI de chaque PR un contrôle de poids par page, qui échoue avant la fusion et pas
+après sur main ». Workflow `poids-prs.yml` : à chaque changement de main, chaque PR ouverte est fusionnée à blanc avec
+le nouveau main et mesurée (mêmes limites, mêmes tolérances) ; statut « Poids avec le main actuel » sur son dernier
+commit. Les limites ne bougent pas.
+
 ## Retirer « Adapté pour cette offre » (#930) le temps qu'il compense son poids
 
 Kevin, 19.11.2026, 14 h 36 : main était rouge au budget de poids (preparer-panneaux 157 722 o pour 157 400 o : +41 o
 de #928, ~340 o de #930), ce qui bloquait `make deploy` sur #920. Choix : retirer pour l'instant le code d'interface
 de #930 (#939, avec l'allègement de #936), plutôt que de chercher 322 o à retirer ailleurs. #930 revient dans une
 nouvelle PR qui compense son poids. Les limites ne bougent pas.
+
+## Une seule durée pour les bandeaux « Annuler » (Kevin, 19.11.2026, 14 h 07)
+
+- Le bandeau « Offre écartée · Annuler » garde 6 s.
+- Tous les bandeaux avec « Annuler » de l'app ont cette même durée, portée par une seule constante (`UNDO_MS`, useUndo.ts), sans exception par écran.
+- Remplace la durée de 5 s de « Question retirée » (Kevin, 18.11).
