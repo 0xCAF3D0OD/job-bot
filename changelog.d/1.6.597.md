@@ -1,0 +1,1 @@
+Fiche d'une offre sur téléphone : le menu ⋯ dans l'ordre et avec les icônes de la planche ActionsOffre (assistant, agence avec l'immeuble, expirée, note, ouvrir l'annonce, partager ; « Remettre dans Nouvelles » avec la flèche retour)

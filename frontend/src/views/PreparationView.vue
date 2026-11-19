@@ -13,6 +13,7 @@ import PrepCertificates from "../components/PrepCertificates.vue";
 import FormSheet from "../components/FormSheet.vue";
 import PageHero from "../components/PageHero.vue";
 import ActionBar from "../components/ActionBar.vue";
+import BottomBar from "../components/BottomBar.vue";
 import AiWritingLetter from "../components/AiWritingLetter.vue";
 import AppIcon from "../components/AppIcon.vue";
 import BottomSheet from "../components/BottomSheet.vue";
@@ -506,6 +507,8 @@ async function saveThenWrite(): Promise<void> {
 // La rédaction, puis la relecture : le bouton dit ce qui se passe vraiment (BusyButton).
 const phase = ref<"write" | "review">("write");
 const letterDone = ref(false);
+// L’écriture de la lettre sur téléphone, avant la première version : l’écran de la planche ChargementLettre.
+const phoneWriting = computed(() => phone.value && writing.value && !selected.value);
 async function reviewLetter(letter: Letter): Promise<Letter> {
   try {
     const { data } = await api.POST("/api/letters/{draft_id}/review", { params: { path: { draft_id: letter.id } } });
@@ -1243,10 +1246,11 @@ onMounted(() => void load());
             </p>
             <FormSheet :letter-text="currentLetterText" />
           </section>
-          <!-- La barre du bas (C6, C8) : d'abord le formulaire ; une fois ouvert, « J'ai postulé ». -->
-          <ActionBar
+          <!-- La barre du bas (C6, C8) : d'abord le formulaire ; une fois ouvert, « J'ai postulé ». Une ligne, la
+               secondaire à contour à gauche (Kevin, 19.11.2026). -->
+          <BottomBar
             v-if="phone"
-            class="prep-bar apply-actions"
+            class="apply-actions"
           >
             <ApplyActions
               :link="applyLink"
@@ -1256,7 +1260,7 @@ onMounted(() => void load());
               @open="opened = true"
               @mark="markApplied"
             />
-          </ActionBar>
+          </BottomBar>
         </div>
         <aside
           v-if="!phone"
@@ -1404,14 +1408,16 @@ onMounted(() => void load());
                ne rédige rien, le bouton du bas le propose), la lettre entière et modifiable (C4), « Modifier le
                texte » qui ouvre la consigne, puis « J’ai relu la lettre » (C11). -->
           <section
-            class="doc-card"
-            aria-labelledby="letter-card-title"
+            :class="['doc-card', { 'doc-card-writing': phoneWriting }]"
+            :aria-labelledby="phoneWriting ? undefined : 'letter-card-title'"
             data-test="letter-card"
           >
             <!-- Téléphone (§9) : « Moderne · Français » sous le titre et « Changer », qui ouvre la feuille ; plus de
-                 FR / DE / EN sur l’écran. Sur ordinateur, FR / DE / EN reste en haut du document. -->
+                 FR / DE / EN sur l’écran. Sur ordinateur, FR / DE / EN reste en haut du document. Pendant l’écriture
+                 (planche ChargementLettre, Kevin 19.11) : ni carte ni en-tête, le modèle se change une fois la lettre
+                 prête. -->
             <LayoutSheetLink
-              v-if="phone"
+              v-if="phone && !phoneWriting"
               v-model="shownLanguage"
               title="Lettre de motivation"
               title-id="letter-card-title"
@@ -1420,7 +1426,7 @@ onMounted(() => void load());
               language-label="Langue de la lettre"
             />
             <div
-              v-else
+              v-else-if="!phone"
               class="doc-card-head"
             >
               <h2 id="letter-card-title">
@@ -1568,7 +1574,9 @@ onMounted(() => void load());
             </div>
             <AiWritingLetter
               v-else-if="writing && !selected"
-              :with-cv="cvState === 'busy'"
+              :cv="cvState"
+              :cv-ready="!!currentCvId"
+              :phase="phase"
               :done="letterDone"
             />
 
@@ -2227,6 +2235,8 @@ onMounted(() => void load());
 .prep-desk .prep-side { gap: var(--space-4); }
 .prep-desk .offer-brief-group h3 { margin-top: var(--space-4); }
 .prep-desk .side-card > h2 { font-size: var(--font-title); font-weight: var(--weight-bold); }
+/* Planche ChargementLettre (Kevin, 19.11) : pendant l’écriture, plus de carte, tout sur le fond de la page. */
+.doc-card.doc-card-writing { padding: 0; background: none; border: 0; }
 .prep-desk .doc-card { position: relative; gap: 0; padding: 0; overflow: hidden; background: var(--surface-muted); }
 .prep-desk .doc-card-head h2 { font-size: var(--font-title); }
 .prep-desk .doc-card > :not(.doc-card-head, .doc-search, .doc-hit-box, .letter-sheet, .cv-sheet, .prep-writing, .prep-empty-page) { margin-left: var(--prep-24); margin-right: var(--prep-24); }
@@ -2292,16 +2302,24 @@ onMounted(() => void load());
 .cv-why-actions > .cv-why-step:first-child { margin-left: auto; }
 .cv-why-step.next { border: 0; background: var(--primary); color: var(--on-primary, #fff); }
 /* Le panneau « Adapté pour cette offre » (PreparerOrdinateurCVChangements) : la phrase 15/22, puis un bloc par changement
-   (16 au-dessus et dessous, trait --line-soft), titre 16/22, « Avant » 14/20 gris, « Maintenant » 14/20, le lien 44 px. */
+   (16 au-dessus et dessous, trait --line-soft), titre 16/22, « Avant » 14/20 gris à 4 px, « Maintenant » 14/20 à 4 px (6 et 2 sur la planche, grille de 4),
+   « Pourquoi » 14/20 à 8 px (cible 18 px, mots de l'annonce sur #FFE9A8, sombre #5C4A14), le lien 44 px à 4 px. */
+/* Les marges de la planche (8 sous la phrase, 16 au-dessus de la note) remplacent l'écart de 16 du corps du panneau. */
+.sheet-body:has(> .cv-changes) { gap: 0; }
 .cv-changes-intro, .cv-changes { --cv-22: 22px; }
-.cv-changes-intro { margin: 0 0 var(--space-2); font-size: var(--font-label); line-height: var(--cv-22); color: var(--text-secondary); }
+.cv-changes-intro { margin: 0 0 var(--space-2); font-size: var(--font-label); line-height: var(--cv-22); color: var(--text-lead); }
 .cv-changes { list-style: none; margin: 0; padding: 0; }
 .cv-changes > li { display: flex; flex-direction: column; align-items: flex-start; padding: var(--space-4) 0; border-top: 1px solid var(--line-soft); }
-.cv-changes b { font-size: var(--font-body); line-height: var(--cv-22); }
+.cv-changes > li > b { font-size: var(--font-body); line-height: var(--cv-22); }
 .cv-change-before { margin-top: var(--space-1); font-size: var(--font-small); line-height: var(--space-5); color: var(--text-secondary); }
-.cv-change-now { font-size: var(--font-small); line-height: var(--space-5); color: var(--text); }
+.cv-change-now { margin-top: var(--space-1); font-size: var(--font-small); line-height: var(--space-5); color: var(--text); }
 .cv-change-undo { min-height: var(--target-min); margin-top: var(--space-1); padding: 0; font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--primary-text); }
-.cv-changes-note { margin: var(--space-6) 0 0; font-size: var(--font-small); line-height: var(--space-5); color: var(--text-secondary); }
+.cv-changes .cv-change-why { margin-top: var(--space-2); font-size: var(--font-small); line-height: var(--space-5); }
+.cv-change-why > .icon { margin-top: 1px; }
+.cv-change-why .cv-why-quote { color: inherit; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .cv-change-why .cv-why-quote { background: #5C4A14; } }
+:root[data-theme="dark"] .cv-change-why .cv-why-quote { background: #5C4A14; }
+.cv-changes-note { margin: var(--space-4) 0 0; font-size: var(--font-small); line-height: var(--space-5); color: var(--text-secondary); }
 .prep-ai-link { display: inline-flex; align-items: center; gap: var(--space-1); min-height: var(--target-min); justify-self: start; color: var(--primary-text); font-size: var(--font-small); font-weight: var(--weight-bold); text-decoration: none; }
 .prep-ai-link:hover { text-decoration: underline; }
 .prep-ai-link .icon { width: 14px; height: 14px; }

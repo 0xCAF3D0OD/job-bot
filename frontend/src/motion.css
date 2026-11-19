@@ -1,0 +1,74 @@
+/* Le mouvement des éléments (Kevin, 19.11.2026 ; docs/decisions/2026-11-19-1115-mouvement-des-elements.md).
+   Changer de page reste instantané : seuls les éléments À L'INTÉRIEUR d'une page s'animent. On n'anime que
+   l'opacité et la transformation (jamais height, top, margin), et rien ne bloque un clic : un bouton visible est
+   utilisable, même pendant son entrée. Le texte tapé, les champs et les listes longues ne s'animent pas.
+
+   Mode d'emploi (docs/mouvement.md) :
+   - un élément qui entre : class="motion-in" (style="--motion-i: 2" pour son rang dans la cascade) ;
+   - un groupe qui entre en cascade : class="motion-cascade" sur le parent (les 5 premiers enfants à 40 ms
+     d'écart, les suivants avec le 5e) ;
+   - un élément qui apparaît et disparaît : <Transition name="motion"> ;
+   - une feuille ou un îlot : <Transition name="motion-sheet">, son fond assombri <Transition name="motion-scrim"> ;
+   - le contenu d'une étape qui change : <Transition name="motion-step" mode="out-in"> (l'ancien sort, puis le
+     nouveau entre, jamais les deux à la fois) ;
+   - une barre de progression : class="motion-bar" sur le remplissage, style="--motion-value: 0.4", dans une piste
+     en overflow: hidden (le remplissage glisse au lieu de changer de largeur). */
+:root {
+  /* Entrée : Material 3 « emphasized decelerate ». Sortie : « emphasized accelerate », plus courte. */
+  --motion-enter: 320ms cubic-bezier(0.05, 0.7, 0.1, 1);
+  --motion-exit: 180ms cubic-bezier(0.3, 0, 0.8, 0.15);
+  --motion-stagger: 40ms;
+  --motion-sheet: 300ms cubic-bezier(0.05, 0.7, 0.1, 1);
+  --motion-sheet-exit: 200ms cubic-bezier(0.3, 0, 0.8, 0.15);
+  --motion-scrim: 200ms ease;
+  --motion-step-exit: 150ms cubic-bezier(0.3, 0, 0.8, 0.15);
+  --motion-progress: 300ms cubic-bezier(0.2, 0, 0, 1);
+  --motion-rise: 8px;
+  --motion-sink: 4px;
+  --motion-sheet-rise: 24px;
+}
+
+/* Mouvement réduit (WCAG 2.3.3) : un fondu d'opacité seul, 150 ms, sans déplacement ni cascade. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-enter: 150ms linear;
+    --motion-exit: 150ms linear;
+    --motion-stagger: 0ms;
+    --motion-sheet: 150ms linear;
+    --motion-sheet-exit: 150ms linear;
+    --motion-scrim: 150ms linear;
+    --motion-step-exit: 150ms linear;
+    --motion-progress: 0ms;
+    --motion-rise: 0px;
+    --motion-sink: 0px;
+    --motion-sheet-rise: 0px;
+  }
+}
+
+@keyframes motion-in { from { opacity: 0; transform: translateY(var(--motion-rise)); } }
+@keyframes motion-out { to { opacity: 0; transform: translateY(var(--motion-sink)); } }
+@keyframes motion-sheet-in { from { opacity: 0; transform: translateY(var(--motion-sheet-rise)); } }
+@keyframes motion-sheet-out { to { opacity: 0; transform: translateY(var(--motion-sheet-rise)); } }
+@keyframes motion-fade-in { from { opacity: 0; } }
+@keyframes motion-fade-out { to { opacity: 0; } }
+
+/* `backwards` : une fois entré, l'élément ne garde pas la transformation (l'appui et le survol gardent la leur). */
+.motion-in, .motion-cascade > *, .motion-enter-active, .motion-step-enter-active {
+  animation: motion-in var(--motion-enter) backwards;
+  animation-delay: calc(min(var(--motion-i, 0), 4) * var(--motion-stagger));
+}
+/* Une étape dont les enfants entrent en cascade : le bloc lui-même n'ajoute pas son propre glissement. */
+.motion-step-enter-active.motion-cascade { animation: none; }
+.motion-cascade > :nth-child(2) { --motion-i: 1; }
+.motion-cascade > :nth-child(3) { --motion-i: 2; }
+.motion-cascade > :nth-child(4) { --motion-i: 3; }
+.motion-cascade > :nth-child(n + 5) { --motion-i: 4; }
+/* Ce qui sort ne répond plus : un second clic sur un bouton qui s'en va ne relance pas son action. */
+.motion-leave-active, .motion-step-leave-active, .motion-sheet-leave-active { pointer-events: none; }
+.motion-leave-active { animation: motion-out var(--motion-exit) forwards; }
+.motion-step-leave-active { animation: motion-out var(--motion-step-exit) forwards; }
+.motion-sheet-enter-active { animation: motion-sheet-in var(--motion-sheet) backwards; }
+.motion-sheet-leave-active { animation: motion-sheet-out var(--motion-sheet-exit) forwards; }
+.motion-scrim-enter-active { animation: motion-fade-in var(--motion-scrim) backwards; }
+.motion-scrim-leave-active { animation: motion-fade-out var(--motion-scrim) forwards; }
+.motion-bar { transform: translateX(calc((var(--motion-value, 0) - 1) * 100%)); transition: transform var(--motion-progress); }

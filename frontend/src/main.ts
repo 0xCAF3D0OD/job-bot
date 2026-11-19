@@ -10,6 +10,7 @@ import { useTheme } from "./composables/useTheme";
 import { applyLang, lang } from "./lang";
 import "@fontsource-variable/figtree";
 import "./style.css";
+import "./motion.css";
 
 // Après une mise à jour, une page restée ouverte demande des fichiers de l'ancienne version, qui
 // n'existent plus : on recharge la page une fois pour prendre la nouvelle, au lieu d'une page
