@@ -629,8 +629,13 @@ const sheetExtra = computed<MoreMenuItem[]>(() => {
   const items: MoreMenuItem[] = [...nearbyItem.value];
   // « Remettre dans Nouvelles » seulement pour une offre gardée ou écartée (Kevin, 17.11, planche ActionsOffre).
   if (o.status === "later" || o.status === "ignored") {
-    items.push({ label: "Remettre dans Nouvelles", test: "back-to-review", icon: "refresh", run: () => emit("status", "to_review") });
+    items.push({ label: "Remettre dans Nouvelles", test: "back-to-review", icon: "undo", run: () => emit("status", "to_review") });
   }
+  // Ordre de la planche ActionsOffre (et ActionsOffreGardee) du §72l : Demander à l'assistant, agence, expirée, note,
+  // puis « Ouvrir l'annonce sur le site » et « Partager ».
+  if (assistant.available.value) items.push({ label: "Demander à l’assistant", test: "ask-assistant", icon: "ai", run: askAssistant });
+  // Icône de la planche : l'immeuble (le drapeau reste dans le menu de l'ordinateur).
+  items.push(...markAgency.value.map((item) => ({ ...item, icon: "building" as const })));
   if (o.status !== "applied") {
     items.push(
       o.expired_at
@@ -639,14 +644,12 @@ const sheetExtra = computed<MoreMenuItem[]>(() => {
     );
   }
   if (scored.value) items.push({ label: "Cette note ne me correspond pas", test: "score-correction-menu", icon: "thumbs-down", run: () => (correcting.value = true) });
-  items.push(...markAgency.value);
   // Planches ActionsOffre et ActionsOffreGardee (§72l, Kevin, 19.11.2026) : « Ouvrir l'annonce sur le site », juste
   // avant « Partager », ouvre le site d'origine dans un nouvel onglet (le lien n'est plus dans « Le poste »).
   const url = shareUrl.value;
   if (url) items.push({ label: "Ouvrir l’annonce sur le site", test: "open-ad", icon: "external", run: () => void window.open(url, "_blank", "noopener,noreferrer") });
   // Lot 18 (maquette Offre) : l'en-tête n'a plus que retour, garder et « … » ; Partager passe dans la feuille.
   if (url) items.push({ label: "Partager", test: "share", icon: "share-nodes", run: () => void share() });
-  if (assistant.available.value) items.push({ label: "Demander à l’assistant", test: "ask-assistant", icon: "ai", run: askAssistant });
   return items;
 });
 // Sauvegarder (O2) : l'état « Plus tard », qui existe déjà ; le signet est plein quand l'offre y est.
