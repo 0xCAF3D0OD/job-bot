@@ -1163,6 +1163,14 @@ class Interview(Base):
     """Retour d'entretien (docs/23) : déroulé, ressenti, questions, enseignements, suite."""
 
     __tablename__ = "interviews"
+    __table_args__ = (
+        CheckConstraint(
+            "feeling in ('bien', 'moyen', 'pas_bien')", name="interviews_feeling_values"
+        ),
+        CheckConstraint(
+            "feeling is not null or rating is not null", name="interviews_feeling_or_rating"
+        ),
+    )
 
     user_id: Mapped[int] = account_column()
 
@@ -1176,7 +1184,11 @@ class Interview(Base):
     duration: Mapped[str | None] = mapped_column(Text)
     interviewers: Mapped[Any] = mapped_column(JSONB, nullable=False, default=list)
     people_count: Mapped[int | None] = mapped_column(SmallInteger)
-    rating: Mapped[int] = mapped_column(SmallInteger)
+    # Note sur 5 du formulaire complet ; facultative depuis « Faire le point » (0097), qui demande
+    # seulement le ressenti en trois mots (`feeling`). Au moins l'un des deux.
+    rating: Mapped[int | None] = mapped_column(SmallInteger)
+    feeling: Mapped[str | None] = mapped_column(Text)
+    notes: Mapped[str | None] = mapped_column(Text)
     stress: Mapped[int | None] = mapped_column(SmallInteger)
     interest: Mapped[str | None] = mapped_column(Text)
     outlook: Mapped[str | None] = mapped_column(Text)

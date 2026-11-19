@@ -155,6 +155,11 @@ export function meetingChip(value: string | Date): string {
   return `${text.charAt(0).toUpperCase()}${text.slice(1)}, ${timeOfDay(value)}`;
 }
 
+/** Un entretien dans une phrase (maquette FairePoint) : « mercredi 12 nov., 14 h ». */
+export function meetingInLine(value: string | Date): string {
+  return `${clean(weekdayShort.format(toDate(value)))}, ${timeOfDay(value)}`;
+}
+
 // Le sélecteur de date et heure (maquette du 8 novembre, docs/143, D26) : des jours de calendrier sans heure ni
 // fuseau (« 2026-11-10 ») et des heures « 09:30 ». Les calculs se font en UTC pour éviter les décalages d'heure d'été.
 const longDay = new Intl.DateTimeFormat("fr-CH", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });

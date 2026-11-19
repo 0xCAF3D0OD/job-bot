@@ -41,6 +41,8 @@ const MAQUETTE = new Set([
   // Planches AlertesOrdinateurVide et AlertesOrdinateurSite du 17.11, titre du volet donné par Kevin le 17.11.
   "./components/AlertsDeskStart.vue : Ta recherche",
   "./components/AlertsSearchPanel.vue : Ta recherche",
+  // Planche FairePoint du 18.11 (accord de Kevin du 18.11.2026 pour la page entière).
+  "./views/FairePointView.vue : Tes notes",
 ]);
 
 function template(source: string): string {

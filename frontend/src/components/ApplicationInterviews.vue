@@ -5,7 +5,7 @@ import type { Application, Interview } from "../api/client";
 import { interviewUpcoming, needsFeedback } from "../applicationState";
 import { useAssistant } from "../composables/useAssistant";
 import { dateInSentence, meetingDate } from "../dates";
-import { KINDS, NEXT_STEPS } from "../interviewLabels";
+import { feelingText, KINDS, NEXT_STEPS } from "../interviewLabels";
 import MoreMenu, { type MoreMenuItem } from "./MoreMenu.vue";
 
 // Les entretiens d'une candidature (docs/74) : le prochain, le résumé du dernier et une seule action visible ; le reste
@@ -21,7 +21,7 @@ const latest = computed<Interview | null>(() => props.application.interviews?.at
 const summary = computed(() => {
   const i = latest.value;
   if (!i) return "";
-  const parts = [(i.kind && KINDS[i.kind]) || "Entretien", `ressenti ${i.rating}/5`];
+  const parts = [(i.kind && KINDS[i.kind]) || "Entretien", `ressenti ${feelingText(i)}`];
   if (i.next_step && i.next_step !== "rien") {
     const when = i.next_step_at ? ` avant ${dateInSentence(`${i.next_step_at}T12:00:00`)}` : "";
     parts.push(`suite : ${(NEXT_STEPS[i.next_step] ?? "").toLowerCase()}${when}`);

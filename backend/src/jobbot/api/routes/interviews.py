@@ -1,6 +1,6 @@
 """Retours d'entretien (docs/23) : un par entretien, rattaché à la candidature."""
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from typing import Annotated, Literal
 
 from fastapi import APIRouter, HTTPException, Query, Request, status
@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from jobbot.db.models import Application, Interview, InterviewPractice, Offer
 from jobbot.interviews import board, practice, service
+from jobbot.notify.interviews import LOCAL_TZ
 from jobbot.runtime import Runtime
 
 router = APIRouter(prefix="/api", tags=["interviews"])
@@ -21,7 +22,12 @@ Format = Literal["sur_place", "visio", "telephone"]
 Duration = Literal["moins_30", "30_60", "plus_60"]
 Interviewer = Literal["rh", "manager", "equipe", "direction"]
 Score = Annotated[int, Field(ge=1, le=5)]
-NextStep = Literal["rien", "entretien", "reponse", "test"]
+NextStep = Literal["rien", "entretien", "reponse", "test", "refus"]
+# « Comment ça s'est passé ? » de « Faire le point » (planche FairePoint, 0097).
+Feeling = Literal["bien", "moyen", "pas_bien"]
+# La relance conseillée après « J'attends une réponse » : une semaine après l'entretien (planche :
+# entretien le 12 nov., relance le 19). Calculée ici, jamais saisie (Kevin, 18.11.2026).
+FOLLOW_UP_AFTER = timedelta(days=7)
 
 
 def _runtime(request: Request) -> Runtime:
@@ -35,7 +41,8 @@ class InterviewQuestion(BaseModel):
 
 
 class InterviewIn(BaseModel):
-    """Toutes les réponses sont facultatives, sauf le ressenti global (docs/23 §2)."""
+    """Toutes les réponses sont facultatives, sauf le ressenti global (docs/23 §2). Un retour fait
+    par « Faire le point » n'a qu'un ressenti en trois mots : il peut garder sa note vide."""
 
     kind: Kind | None = None
     held_at: date | None = None
@@ -43,7 +50,7 @@ class InterviewIn(BaseModel):
     duration: Duration | None = None
     interviewers: list[Interviewer] = Field(default_factory=list, max_length=4)
     people_count: Annotated[int, Field(ge=1, le=30)] | None = None
-    rating: Score
+    rating: Score | None = None
     stress: Score | None = None
     interest: Literal["more", "same", "less"] | None = None
     outlook: Literal["positive", "unsure", "negative"] | None = None
@@ -87,6 +94,8 @@ class InterviewIn(BaseModel):
 class InterviewOut(InterviewIn):
     model_config = ConfigDict(from_attributes=True)
 
+    feeling: Feeling | None = None
+    notes: str | None = None
     id: int
     application_id: int
     created_at: datetime
@@ -119,6 +128,8 @@ async def add_interview(request: Request, application_id: int, body: InterviewIn
     async with _runtime(request).sessionmaker.begin() as session:
         if await session.get(Application, application_id) is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "candidature introuvable")
+        if body.rating is None:
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "ressenti global manquant")
         interview = Interview(application_id=application_id, **_values(body))
         session.add(interview)
         await session.flush()
@@ -132,6 +143,8 @@ async def update_interview(request: Request, interview_id: int, body: InterviewI
         interview = await session.get(Interview, interview_id)
         if interview is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "retour introuvable")
+        if body.rating is None and interview.feeling is None:
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "ressenti global manquant")
         for key, value in _values(body).items():
             setattr(interview, key, value)
         await session.flush()
@@ -149,6 +162,89 @@ async def delete_interview(request: Request, interview_id: int) -> None:
         interview = await session.get(Interview, interview_id)
         if interview is not None:
             await session.delete(interview)
+
+
+# --- Faire le point (planche FairePoint, accord de Kevin du 18.11.2026) ------------------------
+
+
+class DebriefIn(BaseModel):
+    """Les trois réponses de la page : le ressenti (obligatoire), la suite et les notes."""
+
+    feeling: Feeling
+    next_step: Literal["reponse", "entretien", "refus"] | None = None
+    notes: Annotated[str, Field(max_length=2000)] | None = None
+
+    @field_validator("notes")
+    @classmethod
+    def _strip(cls, value: str | None) -> str | None:
+        return (value or "").strip() or None
+
+
+class DebriefOut(BaseModel):
+    """L'entretien (carte du haut), les réponses déjà données et la relance calculée."""
+
+    application_id: int
+    company: str
+    job_title: str
+    interview_at: datetime
+    feeling: Feeling | None
+    next_step: str | None
+    notes: str | None
+    follow_up_on: date
+
+
+async def _debrief(
+    session: AsyncSession, application_id: int
+) -> tuple[Application, date, Interview | None]:
+    application = await session.get(Application, application_id)
+    if application is None or application.interview_at is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "entretien introuvable")
+    # Le jour de l'entretien en Suisse, comme le rappel du lendemain (notify/interviews.py).
+    day = application.interview_at.astimezone(LOCAL_TZ).date()
+    interview = await session.scalar(
+        select(Interview)
+        .where(Interview.application_id == application_id, Interview.held_at == day)
+        .order_by(Interview.id.desc())
+        .limit(1)
+    )
+    return application, day, interview
+
+
+def _debrief_out(application: Application, day: date, interview: Interview | None) -> DebriefOut:
+    assert application.interview_at is not None
+    return DebriefOut(
+        application_id=application.id,
+        company=application.company,
+        job_title=application.job_title,
+        interview_at=application.interview_at,
+        feeling=interview.feeling if interview else None,
+        next_step=interview.next_step if interview else None,
+        notes=interview.notes if interview else None,
+        follow_up_on=day + FOLLOW_UP_AFTER,
+    )
+
+
+@router.get("/applications/{application_id}/debrief", operation_id="getDebrief")
+async def get_debrief(request: Request, application_id: int) -> DebriefOut:
+    async with _runtime(request).sessionmaker() as session:
+        return _debrief_out(*await _debrief(session, application_id))
+
+
+@router.put("/applications/{application_id}/debrief", operation_id="saveDebrief")
+async def save_debrief(request: Request, application_id: int, body: DebriefIn) -> DebriefOut:
+    """Enregistre le point sur l'entretien du jour prévu : crée le retour, ou complète celui de ce
+    jour (sa note sur 5 et ses autres réponses restent). Aucune IA, le statut ne change pas."""
+    async with _runtime(request).sessionmaker.begin() as session:
+        application, day, interview = await _debrief(session, application_id)
+        if interview is None:
+            interview = Interview(application_id=application_id, held_at=day)
+            session.add(interview)
+        interview.feeling = body.feeling
+        interview.next_step = body.next_step
+        interview.next_step_at = day + FOLLOW_UP_AFTER if body.next_step == "reponse" else None
+        interview.notes = body.notes
+        await session.flush()
+        return _debrief_out(application, day, interview)
 
 
 # --- Enseignements et conseils (docs/23 §3) ----------------------------------------------

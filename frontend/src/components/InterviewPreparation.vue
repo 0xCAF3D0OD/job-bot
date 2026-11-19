@@ -4,6 +4,7 @@ import { useRouter } from "vue-router";
 
 import { api, type Application, type InterviewInsights, type Offer, type Practice } from "../api/client";
 import { dateInList, meetingDate } from "../dates";
+import { feelingText } from "../interviewLabels";
 import InterviewCoaching from "./InterviewCoaching.vue";
 import AiWriting from "./AiWriting.vue";
 import AppIcon from "./AppIcon.vue";
@@ -137,7 +138,7 @@ onMounted(async () => {
             v-for="item in application.interviews"
             :key="item.id"
           >
-            Ressenti {{ item.rating }}/5<template v-if="item.went_badly">
+            Ressenti {{ feelingText(item) }}<template v-if="item.went_badly">
               · à améliorer : {{ item.went_badly }}
             </template>
           </li>

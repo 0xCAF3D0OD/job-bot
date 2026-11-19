@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { components } from "../../api/schema";
 import { dayShort } from "../../bilanText";
-import { KINDS } from "../../interviewLabels";
+import { feelingText, KINDS } from "../../interviewLabels";
 import InterviewInsights from "../InterviewInsights.vue";
 
 // « Entretiens » déplié (1.6.62) : la liste (date, entreprise, type, état), puis, sans second
@@ -11,7 +11,7 @@ defineProps<{ lines: components["schemas"]["InterviewLineOut"][] }>();
 function state(line: components["schemas"]["InterviewLineOut"]): string {
   if (line.state === "upcoming") return "à venir";
   if (line.state === "rejected") return "pas retenu";
-  if (line.state === "rated") return `ressenti ${line.rating}/5`;
+  if (line.state === "rated") return `ressenti ${feelingText(line)}`;
   return "retour à faire";
 }
 </script>

@@ -85,6 +85,7 @@ class InterviewLineOut(BaseModel):
     kind: str | None
     state: Literal["upcoming", "rejected", "rated", "done"]
     rating: int | None = None
+    feeling: Literal["bien", "moyen", "pas_bien"] | None = None
 
 
 class SearchReportOut(BaseModel):

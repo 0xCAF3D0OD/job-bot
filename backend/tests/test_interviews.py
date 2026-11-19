@@ -16,14 +16,17 @@ from .conftest import admin_engine
 
 async def add_application(runtime: Runtime, **extra: object) -> int:
     async with runtime.sessionmaker.begin() as session:
-        values: dict[str, object] = {"company": "Exemple SA", **extra}
+        values: dict[str, object] = {
+            "company": "Exemple SA",
+            "interview_at": datetime(2026, 10, 6, 9, 0, tzinfo=UTC),
+            **extra,
+        }
         application = Application(
             sent_at=date(2026, 10, 2),
             method="electronique",
             job_title="Ingénieur DevOps",
             orp_month="2026-10",
             status="entretien",
-            interview_at=datetime(2026, 10, 6, 9, 0, tzinfo=UTC),
             **values,
         )
         session.add(application)
@@ -209,3 +212,58 @@ async def test_coach_counts_an_unreadable_answer(
     async with runtime.engine.begin() as conn:
         await conn.execute(text("DELETE FROM llm_calls WHERE purpose = 'coach'"))
     await reset(runtime)
+
+
+async def test_debrief_page(client: AsyncClient, runtime: Runtime) -> None:
+    """« Faire le point » (planche FairePoint, Kevin 18.11.2026) : le ressenti en trois mots, la
+    suite et les notes ; la relance est calculée (jour de l'entretien + 7 jours), jamais saisie."""
+    await reset(runtime)
+    app_id = await add_application(runtime, interview_at=datetime(2026, 11, 12, 13, 0, tzinfo=UTC))
+    empty = (await client.get(f"/api/applications/{app_id}/debrief")).json()
+    assert empty["company"] == "Exemple SA" and empty["feeling"] is None
+    assert empty["follow_up_on"] == "2026-11-19"
+    body = {"feeling": "bien", "next_step": "reponse", "notes": "  Équipe de 6.  "}
+    saved = (await client.put(f"/api/applications/{app_id}/debrief", json=body)).json()
+    assert (saved["feeling"], saved["notes"]) == ("bien", "Équipe de 6.")
+    [interview] = (await client.get(f"/api/applications/{app_id}/interviews")).json()
+    # Le jour en Suisse ; la relance va dans la suite, pour l'agenda ; pas de note sur 5 inventée.
+    assert interview["held_at"] == "2026-11-12" and interview["next_step_at"] == "2026-11-19"
+    assert interview["rating"] is None and interview["feeling"] == "bien"
+    # Le point refait complète le même retour ; « On m'a dit non » n'a pas de relance.
+    again = {"feeling": "pas_bien", "next_step": "refus"}
+    await client.put(f"/api/applications/{app_id}/debrief", json=again)
+    [interview] = (await client.get(f"/api/applications/{app_id}/interviews")).json()
+    assert (interview["feeling"], interview["next_step"], interview["next_step_at"]) == (
+        "pas_bien",
+        "refus",
+        None,
+    )
+    assert interview["notes"] is None
+    # Le formulaire complet peut rouvrir ce retour sans note sur 5, et la garder vide.
+    kept = await client.put(f"/api/interviews/{interview['id']}", json={"kind": "technique"})
+    assert kept.status_code == 200 and kept.json()["feeling"] == "pas_bien"
+    # Le ressenti est obligatoire ; une candidature sans entretien n'a pas de point.
+    assert (await client.put(f"/api/applications/{app_id}/debrief", json={})).status_code == 422
+    no_meeting = await add_application(runtime, interview_at=None)
+    assert (await client.get(f"/api/applications/{no_meeting}/debrief")).status_code == 404
+    assert (await client.get("/api/applications/999999/debrief")).status_code == 404
+
+
+async def test_debrief_keeps_the_full_form(client: AsyncClient, runtime: Runtime) -> None:
+    """Un retour déjà fait par le formulaire complet garde sa note et ses réponses."""
+    await reset(runtime)
+    app_id = await add_application(runtime)
+    await client.post(
+        f"/api/applications/{app_id}/interviews",
+        json={"held_at": "2026-10-06", "rating": 4, "went_well": "Démo"},
+    )
+    await client.put(f"/api/applications/{app_id}/debrief", json={"feeling": "moyen"})
+    [interview] = (await client.get(f"/api/applications/{app_id}/interviews")).json()
+    assert (interview["rating"], interview["went_well"], interview["feeling"]) == (
+        4,
+        "Démo",
+        "moyen",
+    )
+    # La moyenne des notes ignore les points sans note.
+    insights = (await client.get("/api/interviews/insights")).json()
+    assert insights["average_rating"] == 4
