@@ -536,7 +536,7 @@ describe("Ma candidature sur téléphone (maquette Preparer, étape 7a)", () => 
     mockGet([letter(11, 1), letter(12, 2, { instruction: "plus court", read_at: "2026-10-05T09:00:00Z" })]);
     POST.mockResolvedValue({ data: letter(13, 3, { language: "de" }) });
     const wrapper = await mountView();
-    const bar = wrapper.find("[data-test=action-bar]");
+    const bar = wrapper.find("[data-test=bottom-bar]");
     // Rien à rédiger : un seul bouton, « J'ai relu, continuer ».
     expect(bar.find("[data-test=next-step]").text()).toBe("J’ai relu, continuer");
     expect(bar.find("[data-test=write]").exists()).toBe(false);
@@ -602,7 +602,7 @@ describe("Ma candidature sur téléphone (maquette Preparer, étape 7a)", () => 
     expect(wrapper.find("[data-test=tab-letter] [data-test=step-done]").exists()).toBe(false);
     // L'étape CV reste ouverte.
     expect(wrapper.find("[data-test=tab-cv]").attributes("href")).toContain("doc=cv");
-    await wrapper.get("[data-test=action-bar] [data-test=next-step]").trigger("click");
+    await wrapper.get("[data-test=bottom-bar] [data-test=next-step]").trigger("click");
     await flushPromises();
     expect(PUT).toHaveBeenCalledWith("/api/letters/{draft_id}/read", { params: { path: { draft_id: 11 } }, body: { read: true } });
     expect(wrapper.vm.$router.currentRoute.value.query.doc).toBe("cv");
@@ -802,7 +802,7 @@ describe("Ma candidature sur téléphone (maquette Preparer, étape 7a)", () => 
     mockGet([letter(11, 1)]);
     PUT.mockResolvedValue({ error: { detail: "Dans la démo, rien n’est enregistré." } });
     const wrapper = await mountView();
-    await wrapper.get("[data-test=action-bar] [data-test=next-step]").trigger("click");
+    await wrapper.get("[data-test=bottom-bar] [data-test=next-step]").trigger("click");
     await flushPromises();
     expect(wrapper.get("[role=alert]").text()).toBe("Dans la démo, rien n’est enregistré.");
     expect(wrapper.vm.$router.currentRoute.value.query.doc).toBeUndefined();
@@ -849,9 +849,9 @@ describe("Ma candidature sur téléphone (maquette Preparer, étape 7a)", () => 
     mockGet([letter(11, 1)]);
     const wrapper = await mountView("/offres/7/preparer?doc=postuler");
     const bar = wrapper.get("[data-test=bottom-bar]");
-    expect(wrapper.find("[data-test=action-bar]").exists()).toBe(false);
-    expect(bar.get("[data-test=apply]").classes()).toContain("bottom-bar-primary");
-    expect(bar.get("[data-test=already-applied]").classes()).toContain("bottom-bar-secondary");
+    expect(wrapper.findAll("[data-test=bottom-bar]")).toHaveLength(1);
+    expect(bar.get("[data-test=apply]").classes()).toContain("bb-main");
+    expect(bar.get("[data-test=already-applied]").classes()).toContain("bb-alt");
     expect(bar.get("[data-test=already-applied]").text()).toContain("J’ai déjà postulé");
   });
 
@@ -867,9 +867,9 @@ describe("Ma candidature sur téléphone (maquette Preparer, étape 7a)", () => 
     vi.stubGlobal("matchMedia", (media: string) => ({ matches: media.includes("820px"), addEventListener() {}, removeEventListener() {} }));
     mockGet([]);
     const wrapper = await mountView();
-    expect(wrapper.find("[data-test=action-bar] [data-test=write]").text()).toContain("Rédiger la lettre");
+    expect(wrapper.find("[data-test=bottom-bar] [data-test=write]").text()).toContain("Rédiger la lettre");
     await wrapper.find("[data-test=letter-card] [data-test=language-en]").trigger("click");
-    expect(wrapper.find("[data-test=action-bar] [data-test=write]").text()).toContain("Rédiger en anglais");
+    expect(wrapper.find("[data-test=bottom-bar] [data-test=write]").text()).toContain("Rédiger en anglais");
   });
 });
 
@@ -973,13 +973,13 @@ describe("« Pas vrai » (30.10.2026)", () => {
     const area = wrapper.findAll("[data-test=paragraph]")[1]!;
     (area.element as HTMLTextAreaElement).setSelectionRange(3, 3);
     await area.trigger("click");
-    const bar = wrapper.find("[data-test=action-bar]");
+    const bar = wrapper.find("[data-test=bottom-bar]");
     expect(bar.find("[data-test=false-claim-chosen]").text()).toBe("« J’administre un cluster K3s. »");
     expect(bar.find("[data-test=next-step]").exists()).toBe(false);
     // Une tâche à la fois : ni la langue ni la consigne pendant le choix.
     expect(wrapper.find("[data-test=prep-revise]").exists()).toBe(false);
     await bar.find("[data-test=false-claim-cancel]").trigger("click");
-    expect(wrapper.find("[data-test=action-bar] [data-test=next-step]").exists()).toBe(true);
+    expect(wrapper.find("[data-test=bottom-bar] [data-test=next-step]").exists()).toBe(true);
     expect(wrapper.find("[data-test=prep-revise]").exists()).toBe(true);
   });
   it("une page A4 : « Tient sur une page A4 », ou le débordement, la marque de fin de page et « Raccourcir »", async () => {

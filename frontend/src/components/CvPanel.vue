@@ -16,7 +16,7 @@ import InlineConfirm from "./InlineConfirm.vue";
 import { usePlan } from "../composables/usePlan";
 import PlanLimit from "./PlanLimit.vue";
 import SavedStatus from "./SavedStatus.vue";
-import ActionBar from "./ActionBar.vue";
+import "./bottom-bar.css";
 import DisclosureRow from "./DisclosureRow.vue";
 import DocPreview from "./DocPreview.vue";
 import LayoutSheetLink from "./LayoutSheetLink.vue";
@@ -752,13 +752,15 @@ onMounted(() => void load());
           />
         </div>
       </div>
-      <!-- La barre du bas du téléphone : un seul bouton plein, la prochaine chose à faire. -->
-      <ActionBar
+      <!-- La barre du bas du téléphone, commune (bottom-bar.css) : un seul bouton plein, la prochaine chose à faire. -->
+      <div
         v-if="phone && loaded"
-        class="prep-bar"
+        class="bottom-bar prep-bar"
+        data-test="bottom-bar"
       >
         <InlineConfirm
           v-if="choosingWrite"
+          class="bb-note"
           message="Tu as des modifications non enregistrées dans cette version."
           confirm-label="Enregistrer, puis rédiger"
           alt-label="Rédiger sans enregistrer"
@@ -771,11 +773,12 @@ onMounted(() => void load());
         />
         <PlanLimit
           v-if="writeLabel"
+          class="bb-note"
           usage="cv"
         />
         <BusyButton
           v-if="writeLabel || writing"
-          class="primary prep-bar-main"
+          class="primary bb-main"
           :busy="writing"
           busy-label="Préparation…"
           :disabled="reached('cv')"
@@ -787,7 +790,7 @@ onMounted(() => void load());
         <!-- §37 du 16.11 : « J’ai relu, continuer » note la relecture puis passe à Postuler, comme sur ordinateur. -->
         <BusyButton
           v-else
-          class="primary prep-bar-main"
+          class="primary bb-main"
           :busy="readThenBusy"
           busy-label="Enregistrement…"
           data-test="next-step"
@@ -795,7 +798,7 @@ onMounted(() => void load());
         >
           J’ai relu, continuer
         </BusyButton>
-      </ActionBar>
+      </div>
     </div>
 
     <section class="prep-side">

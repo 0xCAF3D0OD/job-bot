@@ -18,7 +18,7 @@ const emit = defineEmits<{ open: []; mark: [] }>();
 <template>
   <p
     v-if="error"
-    class="notice error bottom-bar-note"
+    class="notice error bb-note"
     role="alert"
   >
     {{ error }}
@@ -28,14 +28,14 @@ const emit = defineEmits<{ open: []; mark: [] }>();
     :href="link.url"
     target="_blank"
     rel="noopener noreferrer"
-    class="button-link primary-link prep-bar-main bottom-bar-primary"
+    class="button-link primary-link prep-bar-main bb-main"
     data-test="apply"
     @click="emit('open')"
   ><span class="with-icon">{{ link.label }}<AppIcon name="external" /></span><span class="visually-hidden"> (nouvel onglet)</span></a>
   <!-- Déjà fait ailleurs (page rechargée, e-mail, téléphone) : sans rouvrir le formulaire. -->
   <BusyButton
     v-if="link && !opened"
-    class="link apply-already bottom-bar-secondary"
+    class="link apply-already bb-alt"
     :busy="busy"
     busy-label="Enregistrement…"
     data-test="already-applied"
@@ -45,7 +45,7 @@ const emit = defineEmits<{ open: []; mark: [] }>();
   </BusyButton>
   <template v-else>
     <BusyButton
-      class="primary prep-bar-main bottom-bar-primary"
+      class="primary prep-bar-main bb-main"
       :busy="busy"
       busy-label="Enregistrement…"
       data-test="mark-applied"
@@ -58,7 +58,7 @@ const emit = defineEmits<{ open: []; mark: [] }>();
       :href="link.url"
       target="_blank"
       rel="noopener noreferrer"
-      class="link apply-reopen bottom-bar-secondary"
+      class="link apply-reopen bb-alt"
       data-test="apply"
     >{{ link.reopen }}<span class="visually-hidden"> (nouvel onglet)</span></a>
   </template>
