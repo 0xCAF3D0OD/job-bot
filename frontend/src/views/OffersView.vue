@@ -1552,9 +1552,9 @@ onUnmounted(() => {
 }
 .offers-chip-remove:hover { background: color-mix(in srgb, var(--accent) 12%, transparent); }
 /* « Sélectionner » (§72q, planches Candidatures et CandidaturesOrdinateurAucuneOuverte du 19.11) : à droite du premier
-   titre de section, 14 px gras bleu, zone de 44 px qui déborde de 12 px au-dessus et au-dessous du titre. */
+   titre de section, 14 px gras bleu, zone de 44 px centrée sur le titre ; ses marges de -22 px ne grandissent pas la ligne. */
 .offers-select-link {
-  --sl-out: -12px; align-self: center; display: inline-flex; align-items: center; min-height: var(--target-min);
+  --sl-out: calc(var(--target-min) / -2); align-self: center; display: inline-flex; align-items: center; min-height: var(--target-min);
   margin: var(--sl-out) 0 var(--sl-out) auto; padding: 0; border: 0; background: none; color: var(--primary-text);
   font-size: var(--font-small); font-weight: var(--weight-bold);
 }
