@@ -18,13 +18,14 @@
     <!-- L'apparence choisie (Compte › Apparence, useTheme) avant le premier dessin : l'écran de lancement la suit. -->
     <script>try{var t=localStorage.getItem("jobA1-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}</script>
     <!-- L'écran de lancement (§53, planche ChargementLancement ; Kevin, 17.11) : seulement pendant le vrai chargement à
-         froid. Il disparaît dès que la première page a du contenu dans <main id="contenu">, sans une ligne de JavaScript
+         froid. Il disparaît dès que la première page a du contenu dans <main id="contenu">, ou dès que la page Assistant
+         du téléphone s'affiche (elle vit hors de <main>, qui reste vide), sans une ligne de JavaScript
          (rien à ajouter au poids des pages) et jamais de délai ajouté. Navigateur sans :has() : pas d'écran de lancement,
          comme avant. L'animation tient en 1,2 s au plus : le 1 se dessine, les deux points, le sourire, puis « jobA1 ».
          Mouvement réduit : tout d'un coup. -->
     <style>
       #lancement{display:none}
-      @supports selector(:has(a)){#lancement{display:flex}body:has(#contenu>*) #lancement{display:none}}
+      @supports selector(:has(a)){#lancement{display:flex}body:has(#contenu>*,.assistant-page) #lancement{display:none}}
       #lancement{position:fixed;inset:0;z-index:2147483647;flex-direction:column;align-items:center;justify-content:center;background:#F7F5F0;color:#1B1F2A;font-family:"Figtree Variable",system-ui,-apple-system,"Segoe UI",sans-serif;--l-line:#2445C2}
       @media (prefers-color-scheme:dark){:root:not([data-theme=light]) #lancement{background:#171411;color:#F3EEE6;--l-line:#7D95FF}}
       :root[data-theme=dark] #lancement{background:#171411;color:#F3EEE6;--l-line:#7D95FF}
