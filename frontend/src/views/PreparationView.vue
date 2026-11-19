@@ -13,6 +13,7 @@ import PrepCertificates from "../components/PrepCertificates.vue";
 import FormSheet from "../components/FormSheet.vue";
 import PageHero from "../components/PageHero.vue";
 import ActionBar from "../components/ActionBar.vue";
+import BottomBar from "../components/BottomBar.vue";
 import AiWritingLetter from "../components/AiWritingLetter.vue";
 import AppIcon from "../components/AppIcon.vue";
 import BottomSheet from "../components/BottomSheet.vue";
@@ -1243,10 +1244,11 @@ onMounted(() => void load());
             </p>
             <FormSheet :letter-text="currentLetterText" />
           </section>
-          <!-- La barre du bas (C6, C8) : d'abord le formulaire ; une fois ouvert, « J'ai postulé ». -->
-          <ActionBar
+          <!-- La barre du bas (C6, C8) : d'abord le formulaire ; une fois ouvert, « J'ai postulé ». Une ligne, la
+               secondaire à contour à gauche (Kevin, 19.11.2026). -->
+          <BottomBar
             v-if="phone"
-            class="prep-bar apply-actions"
+            class="apply-actions"
           >
             <ApplyActions
               :link="applyLink"
@@ -1256,7 +1258,7 @@ onMounted(() => void load());
               @open="opened = true"
               @mark="markApplied"
             />
-          </ActionBar>
+          </BottomBar>
         </div>
         <aside
           v-if="!phone"
