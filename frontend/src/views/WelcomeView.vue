@@ -1517,14 +1517,24 @@ async function finish(to: string): Promise<void> {
           v-else-if="step === 3"
           class="welcome-alert-actions"
         >
+          <!-- OnboardingAlerteDebut et OnboardingAlerteCodeRecu (planches_72_a_72k) : bouton noir, comme « Continuer » des
+               questions, avec le double chevron. -->
           <button
             type="button"
-            class="primary welcome-cta"
+            class="welcome-cta welcome-ink"
             :disabled="alertBusy"
             data-test="welcome-alert-done"
             @click="alertDone"
           >
-            {{ codeReceived ? "J’ai validé l’alerte" : "J’ai créé l’alerte" }}
+            {{ codeReceived ? "J’ai validé l’alerte" : "J’ai créé l’alerte" }}<svg
+              class="icon welcome-alert-chevrons"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            ><path d="m6 6 6 6-6 6M13 6l6 6-6 6" /></svg>
           </button>
           <button
             type="button"
@@ -1648,7 +1658,7 @@ async function finish(to: string): Promise<void> {
 .welcome-ready > strong { font-size: var(--font-figure); font-weight: var(--weight-bold); }
 .welcome-ready p { margin: 0; color: var(--text-secondary); }
 .welcome-ready .link { display: inline-flex; align-items: center; min-height: var(--target-min); font-size: var(--font-body); }
-.welcome-actions { position: sticky; bottom: 0; padding-top: var(--space-3); background: inherit; }
+.welcome-actions { position: sticky; bottom: 0; padding-top: var(--space-3); background: var(--bg); }
 .welcome-blue .welcome-actions { background: var(--primary); }
 .welcome-cta { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 58px; padding: 0 var(--space-5) 0 var(--space-6); border-radius: var(--radius-pill); font-size: var(--font-title); font-weight: var(--weight-bold); }
 .welcome-start { border: 0; background: var(--on-primary); color: var(--on-brand-surface); cursor: pointer; }
@@ -1657,6 +1667,8 @@ async function finish(to: string): Promise<void> {
 /* Section 41 : la phrase 22 px de haut en --text-lead, 16 px au-dessus de la carte (l'écart de l'écran). */
 .welcome-alert-lead { font-size: var(--font-label); color: var(--text-lead); }
 .welcome-alert-actions { display: flex; flex-direction: column; }
+/* Le double chevron de la planche OnboardingAlerteDebut : 22 px, trait 2,2. */
+.welcome-alert-chevrons { --welcome-chevrons: 22px; width: var(--welcome-chevrons); height: var(--welcome-chevrons); stroke-width: 2.2; }
 .welcome-alert-later { align-self: center; min-height: var(--target-min); padding: 0 var(--space-4); font-size: var(--font-label); font-weight: var(--weight-bold); color: var(--primary-text); }
 .welcome-sort { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
 .welcome-sort button { justify-content: center; min-height: 58px; border-radius: var(--radius-pill); font-size: var(--font-body); font-weight: var(--weight-bold); }

@@ -572,6 +572,9 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     expect(alert.find("input").exists()).toBe(false);
     expect(alert.text()).toContain("Termine l’alerte sur jobup");
     expect(wrapper.get("[data-test=welcome-alert-later]").text()).toBe("Plus tard");
+    // Bouton noir avec le double chevron (OnboardingAlerteDebut, planches_72_a_72k).
+    expect(wrapper.get("[data-test=welcome-alert-done]").classes()).toEqual(expect.arrayContaining(["welcome-cta", "welcome-ink"]));
+    expect(wrapper.get("[data-test=welcome-alert-done]").classes()).not.toContain("primary");
 
     await click(wrapper, "welcome-alert-done");
     expect(PUT).toHaveBeenCalledWith("/api/alert-searches/{search_id}/sites/{site}", { params: { path: { search_id: 5, site: "jobup" } } });
