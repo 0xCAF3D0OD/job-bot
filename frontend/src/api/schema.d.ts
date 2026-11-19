@@ -5489,6 +5489,11 @@ export interface components {
              */
             origin_ids: number[];
             /**
+             * Origin Summary
+             * @default
+             */
+            origin_summary: string;
+            /**
              * Reasons
              * @default []
              */

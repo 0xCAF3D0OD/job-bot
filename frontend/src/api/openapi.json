@@ -15616,6 +15616,11 @@
             "title": "Origin Ids",
             "default": []
           },
+          "origin_summary": {
+            "type": "string",
+            "title": "Origin Summary",
+            "default": ""
+          },
           "reasons": {
             "items": {
               "$ref": "#/components/schemas/CvReasonOut"
