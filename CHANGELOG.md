@@ -787,3 +787,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.573 | Recherche et outils : « Lancer » passe du bouton tonal pâle au bouton à contour bleu (§72f, un seul bouton plein par écran) | livrée |
 | 1.6.574 | « Noter maintenant » de la fiche d’une offre en ligne lien avec chevron, comme « Voir la compatibilité » (§72e) | livrée |
 | 1.6.575 | Préparer le rendez-vous (téléphone) : « Annuler » et « Ajouter » sous le champ d'une nouvelle question (§72b), ⋯ « Retirer » sur les questions proposées par jobA1 (le serveur ne les remet plus), bandeau « Question retirée » 5 s ; FeuilleNom sans la phrase « Tout est enregistré… » (§72g) | livrée |
+| 1.6.576 | Textes raccourcis du §72k : 28 phrases plus courtes sur téléphone et ordinateur, sans changement de mise en page | livrée |
