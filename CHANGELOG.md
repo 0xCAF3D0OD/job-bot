@@ -797,3 +797,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.583 | Premiers pas, alerte : « Ouvrir jobup avec ma recherche » devient « Ouvrir jobup », bouton à contour de 44 px aligné à gauche (§72h) | livrée |
 | 1.6.584 | Premiers pas sur ordinateur : le surtitre (« Tes prochaines offres »…) en 15 px gras, à l’encre, sans capitales, comme les planches | livrée |
 | 1.6.585 | Page Assistant du téléphone : l'écran de lancement ne la cache plus (elle restait sur le logo jobA1 depuis le §53) | livrée |
+| 1.6.586 | Fiche d'une offre sur ordinateur : 16 px sous la pastille « Environ 10 secondes · compte dans ta formule », comme sur la planche OffreNonNotee (elle touchait presque le bord de la carte) | livrée |
