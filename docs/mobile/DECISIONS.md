@@ -1233,3 +1233,56 @@ Ces textes sont retirés au téléphone et à l'ordinateur, en clair comme en so
 - CandidaturesVideAlertes : la phrase « jobA1 récupère les nouvelles offres… ».
 - « J'ai contacté quelqu'un » : la phrase sous le titre.
 - Onboarding alerte : le paragraphe devient « Une alerte jobup, et tes offres arrivent toutes seules. Environ 2 minutes. »
+
+## Un seul lien vers l'annonce sur l'écran Offre, option B (Kevin, 19.11.2026, 10 h 57, §72l)
+
+- « Voir l'annonce complète » déplie le texte complet sur place, avec un chevron bas à la place de ↗. Une fois le texte déplié, le lien devient « Masquer l'annonce », avec un chevron haut.
+- Menu ⋯ (planches ActionsOffre et ActionsOffreGardee) : une nouvelle ligne « Ouvrir l'annonce sur le site », icône ↗, juste avant « Partager ». Elle ouvre le site d'origine dans un nouvel onglet.
+- « Voir l'annonce sur jobs.ch » (ou une autre source) disparaît de la fiche.
+- Exception : l'offre provisoire dont le texte n'est pas lu (planche OffreProvisoire, Indeed illisible) garde « Voir l'annonce sur Indeed ».
+- Raison : une action = un lien. Deux liens dans « Le poste » font hésiter.
+- Planches mises à jour (§72l) : Offre, OffreAgence, OffreEcartee, OffreCompatibilite, ActionsOffre, ActionsOffreGardee, en clair et en sombre.
+
+## Mouvement des éléments : entrées et sorties douces dans toute l'app (Kevin, 19.11.2026, 11 h 15)
+
+- Changer de page reste instantané, sans transition entre les routes. Seuls les éléments à l'intérieur d'une page s'animent (illustration, titre, cartes, boutons, pastilles, feuilles, menus ⋯, toasts, panneaux ordinateur, cartes de tri).
+- Entrée : opacité 0 → 1 et translateY 8 px → 0, 320 ms, cubic-bezier(0.05, 0.7, 0.1, 1). Cascade de 40 ms entre deux éléments, sur les 5 premiers éléments visibles au plus ; les suivants entrent avec le 5e.
+- Sortie : opacité 1 → 0 et translateY 0 → 4 px, 180 ms, cubic-bezier(0.3, 0, 0.8, 0.15).
+- Feuilles et îlots : translateY 24 px → 0 et opacité, 300 ms, courbe d'entrée ; fond assombri en fondu de 200 ms ; sortie en 200 ms, courbe de sortie.
+- Changement d'étape dans une page : la barre glisse en 300 ms, cubic-bezier(0.2, 0, 0, 1) ; l'ancien contenu sort en 150 ms, puis le nouveau entre en 320 ms, jamais les deux à la fois.
+- Chargement : un élément qui attend ses données entre quand elles sont là ; avant, un squelette à sa taille finale, sans décalage de mise en page.
+- Technique : seulement opacity et transform ; variables partagées --motion-enter, --motion-exit, --motion-stagger (frontend/src/motion.css) ; rien ne bloque un clic.
+- Mouvement réduit (prefers-reduced-motion) : fondu d'opacité seul, 150 ms, sans déplacement ni cascade (WCAG 2.3.3). Remplace, pour ces entrées et sorties, « tout mouvement s'arrête » de docs/regles-ui-ergonomie.md §6.
+- Ne s'animent pas : le texte tapé, les champs, les listes longues.
+- Ordre de travail : une PR « motion tokens », puis une PR par zone, en commençant par les premiers pas (CV, Ce que tu cherches, Alerte et ses états de code, Trier), téléphone et ordinateur.
+
+## Écriture de la lettre sur téléphone : sous-ligne et étapes vraies (Kevin, 19.11.2026)
+
+- Planche ChargementLettre (+ Sombre) : pas de carte, pas d'en-tête « Lettre de motivation · Moderne · Changer »
+  pendant l'écriture (le modèle se change une fois la lettre prête), tout posé sur le fond de la page à 36 px du bord ;
+  logo, titre manuscrit sur deux lignes, barre, étapes.
+- Sous l'étape « Lettre » en cours : « D'après ton CV et l'annonce ». On n'affiche jamais un texte qu'on ne connaît pas
+  encore (« Ton exemple Nagra en avant » de la planche n'est connu qu'une fois la lettre écrite).
+- « CV adapté » n'apparaît que si le CV s'adapte dans le même passage, et n'est coché que lorsque le CV est prêt.
+
+## Faire le point sur ordinateur (Kevin, 19.11.2026, 12 h 32)
+
+Planches FairePointOrdinateur et FairePointOrdinateurSombre (§72m et §72n du 19.11). Plan annoncé dans le fil « Corriger l'affichage du retour d'entretien » et accepté, avec ces précisions :
+
+- Rendez-vous sur ordinateur, « À noter » : aussi les entretiens passés dont le point n'est pas fait, avec la tuile orange.
+- Un clic ouvre « Faire le point » dans le panneau de droite (ressenti, suite, pastille de relance, notes, « Enregistrer »). Même enregistrement que le téléphone : pas de migration, pas d'IA. Adresse : `?rdv=point-<candidature>`.
+- Sur ordinateur, tous les « Faire le point » (panneau Envoyées, tâche d'Aujourd'hui, lien de la notification) mènent là, plus à la fenêtre centrée.
+- « Voir le retour » ouvre le même panneau, prérempli et modifiable ; « Enregistrer » met à jour (`?rdv=retour-<retour>`). « Ajouter un autre entretien » garde la fenêtre complète en attendant sa planche.
+- Une fois enregistré, l'entretien passe dans « Passés » (et reste dans Envoyées) : tuile grise comme les autres rendez-vous passés, sous-titre « Point fait · Bien », « Moyen » ou « Pas bien », un clic rouvre le panneau prérempli. Raison : l'onglet Rendez-vous garde tout l'historique, on retrouve un entretien au même endroit avant et après le point.
+
+## Barre du bas du téléphone, la même partout (Kevin, 19.11.2026, 12 h 58)
+
+D'après la barre de la planche Offre, pour toutes les barres du bas d'action du téléphone (composant `BottomBar`) :
+- Une seule ligne, padding 12 px 16 px, plus la zone de sécurité du bas.
+- Fond = couleur de la page (#F7F5F0, sombre #171411), trait de 1 px en haut (#E5E2D9, sombre #3A342D).
+- À gauche, au plus une action secondaire : bouton à contour, 48 px de haut, largeur au texte.
+- À droite, l'action principale : bouton plein, 48 px de haut, qui prend le reste de la largeur (flex: 1), écart de 10 px.
+- Précision du 19.11, 13 h 54 : l'écart passe à 12 px, comme la planche Offre (10 px sortait de la grille de 4 et
+  audit-grille le refusait).
+- Plus de lien texte centré sous le bouton principal, ni d'espace vide en dessous.
+- Premier écran : Ma candidature › Postuler (« J'ai déjà postulé » + « Ouvrir l'annonce ↗ »).

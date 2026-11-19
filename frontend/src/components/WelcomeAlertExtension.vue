@@ -82,10 +82,10 @@ const track = computed(() =>
               :href="url"
               target="_blank"
               rel="noopener noreferrer"
-              class="button-link primary-link wa-open"
+              class="button-link wa-open wa-open-jobup"
               data-test="welcome-ext-open"
               @click="opened = true"
-            ><AppIcon name="external" />Ouvrir jobup avec ma recherche<span class="visually-hidden"> (nouvel onglet)</span></a>
+            ><AppIcon name="external" />Ouvrir jobup<span class="visually-hidden"> (nouvel onglet)</span></a>
           </div>
           <a
             v-else-if="installed && mark === 'done' && url"

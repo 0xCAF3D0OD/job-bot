@@ -65,6 +65,11 @@ function openText(): void {
   textHeight.value = textEl.value ? `${textEl.value.scrollHeight}px` : undefined;
   textOpen.value = true;
 }
+// « Masquer l'annonce » (Kevin, 19.11.2026, option B) : replie le texte complet déplié sur téléphone.
+function closeText(): void {
+  textOpen.value = false;
+  textHeight.value = undefined;
+}
 watch(
   () => props.offer.id,
   () => {
@@ -624,8 +629,13 @@ const sheetExtra = computed<MoreMenuItem[]>(() => {
   const items: MoreMenuItem[] = [...nearbyItem.value];
   // « Remettre dans Nouvelles » seulement pour une offre gardée ou écartée (Kevin, 17.11, planche ActionsOffre).
   if (o.status === "later" || o.status === "ignored") {
-    items.push({ label: "Remettre dans Nouvelles", test: "back-to-review", icon: "refresh", run: () => emit("status", "to_review") });
+    items.push({ label: "Remettre dans Nouvelles", test: "back-to-review", icon: "undo", run: () => emit("status", "to_review") });
   }
+  // Ordre de la planche ActionsOffre (et ActionsOffreGardee) du §72l : Demander à l'assistant, agence, expirée, note,
+  // puis « Ouvrir l'annonce sur le site » et « Partager ».
+  if (assistant.available.value) items.push({ label: "Demander à l’assistant", test: "ask-assistant", icon: "ai", run: askAssistant });
+  // Icône de la planche : l'immeuble (le drapeau reste dans le menu de l'ordinateur).
+  items.push(...markAgency.value.map((item) => ({ ...item, icon: "building" as const })));
   if (o.status !== "applied") {
     items.push(
       o.expired_at
@@ -634,10 +644,12 @@ const sheetExtra = computed<MoreMenuItem[]>(() => {
     );
   }
   if (scored.value) items.push({ label: "Cette note ne me correspond pas", test: "score-correction-menu", icon: "thumbs-down", run: () => (correcting.value = true) });
-  items.push(...markAgency.value);
+  // Planches ActionsOffre et ActionsOffreGardee (§72l, Kevin, 19.11.2026) : « Ouvrir l'annonce sur le site », juste
+  // avant « Partager », ouvre le site d'origine dans un nouvel onglet (le lien n'est plus dans « Le poste »).
+  const url = shareUrl.value;
+  if (url) items.push({ label: "Ouvrir l’annonce sur le site", test: "open-ad", icon: "external", run: () => void window.open(url, "_blank", "noopener,noreferrer") });
   // Lot 18 (maquette Offre) : l'en-tête n'a plus que retour, garder et « … » ; Partager passe dans la feuille.
-  if (shareUrl.value) items.push({ label: "Partager", test: "share", icon: "share-nodes", run: () => void share() });
-  if (assistant.available.value) items.push({ label: "Demander à l’assistant", test: "ask-assistant", icon: "ai", run: askAssistant });
+  if (url) items.push({ label: "Partager", test: "share", icon: "share-nodes", run: () => void share() });
   return items;
 });
 // Sauvegarder (O2) : l'état « Plus tard », qui existe déjà ; le signet est plein quand l'offre y est.
@@ -1721,18 +1733,39 @@ watch(
           >
             {{ offer.description }}
           </div>
+          <!-- Un seul lien dans « Le poste » sur téléphone (Kevin, 19.11.2026, option B) : « Voir l’annonce complète »
+               déplie le texte sur place (chevron bas), « Masquer l’annonce » le replie (chevron haut). Le site d’origine
+               s’ouvre depuis « ⋯ › Ouvrir l’annonce sur le site ». Exception OffreProvisoire : sans texte lu, « Voir
+               l’annonce sur Indeed » reste ici. -->
           <div class="post-links">
             <button
               v-if="offer.description && !textOpen && (summaryParts.length || offer.description.length > LONG_TEXT)"
               type="button"
               class="link read-more"
               data-test="read-more"
+              :aria-expanded="columns ? undefined : false"
               @click="openText"
             >
-              Voir l’annonce complète
+              <span
+                v-if="!columns"
+                class="with-icon"
+              >Voir l’annonce complète<AppIcon name="chevron-down" /></span>
+              <template v-else>
+                Voir l’annonce complète
+              </template>
+            </button>
+            <button
+              v-if="!columns && offer.description && textOpen && (summaryParts.length || offer.description.length > LONG_TEXT)"
+              type="button"
+              class="link read-more"
+              data-test="read-less"
+              aria-expanded="true"
+              @click="closeText"
+            >
+              <span class="with-icon">Masquer l’annonce<AppIcon name="chevron-up" /></span>
             </button>
             <a
-              v-if="postLink && !columns && offer.status !== 'applied'"
+              v-if="postLink && !columns && offer.status !== 'applied' && partial"
               :href="postLink.url"
               target="_blank"
               rel="noopener noreferrer"
@@ -2046,7 +2079,9 @@ watch(
 .match-now-link .icon { flex: none; width: var(--now-chevron); height: var(--now-chevron); }
 .match-now .field-error { align-self: stretch; margin: var(--space-2) 0 0; }
 .grey-pill { --pill-pad: 5px; --pill-radius: 15px; --pill-size: 13px; display: inline-flex; align-items: center; min-height: 30px; padding: var(--pill-pad) var(--space-3); border-radius: var(--pill-radius); background: var(--line-soft); color: var(--text-lead); font-size: var(--pill-size); font-weight: var(--weight-semibold); text-align: center; }
-.oc-now { --now-pad: 0px; }
+/* Ordinateur : 16 px sous la pastille, comme la planche OffreNonNotee (16 px de marge en bas de la carte), avec les 8 px
+   du bas de « .oc-head » (Kevin, 19.11 : pastille trop près du bord). */
+.oc-now { --now-pad: 0px; padding-bottom: var(--space-2); }
 /* « Offre expirée » (planche OffreExpiree du 18.11) : la pastille orange, le titre 17 px gras 10 px dessous, la
    phrase 15/21 px grise 4 px dessous. */
 .expired-card { --exp-gap: 10px; --exp-title: 17px; --exp-text-gap: 4px; --exp-lh: 21px; --exp-pill-pad: 3px; --exp-pill-radius: 13px; }

@@ -11,7 +11,13 @@ import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 // `quiet` : dans une zone déjà annoncée (la carte « Mon CV »), la liste n'est pas une seconde zone d'état.
 // `done` (Kevin, 17.11, point 6) : la réponse est là ; barre et étapes finissent en 0,3 s, la page retire le bloc 0,4 s
 // après. Au-delà de la durée habituelle + 50 %, la barre laisse la place à une phrase, jamais une barre figée.
-const props = defineProps<{ lines: string[]; steps: string[]; everyMs: number; label: string; quiet?: boolean; done?: boolean }>();
+// `states` (écriture de la lettre, Kevin 19.11) : l'état vrai de chaque étape, quand la page le connaît, à la place du
+// temps ; `details` : la sous-ligne de l'étape en cours (planche ChargementLettre).
+type StepState = "done" | "current" | "todo";
+const props = defineProps<{
+  lines: string[]; steps: string[]; everyMs: number; label: string; quiet?: boolean; done?: boolean;
+  states?: StepState[]; details?: string[];
+}>();
 
 // Une étape de plus à chaque `everyMs` ; la barre glisse d'un cran à l'autre en 5 s (aria-valuemin et max : 0 et 100
 // par défaut).
@@ -23,6 +29,8 @@ const current = computed(() => (props.done ? 99 : Math.min(tick.value, props.ste
 // 10 % au départ, puis un cran par étape, sans dépasser 90 % : la fin (100 %) vient du serveur.
 const progress = computed(() => (props.done ? 100 : 10 + (Math.min(tick.value, props.steps.length) / props.steps.length) * 80));
 const slow = computed(() => !props.done && tick.value >= props.steps.length * 1.5);
+const stateOf = (index: number): StepState =>
+  props.states?.[index] ?? (index < current.value ? "done" : index === current.value ? "current" : "todo");
 </script>
 
 <template>
@@ -58,10 +66,13 @@ const slow = computed(() => !props.done && tick.value >= props.steps.length * 1.
       <li
         v-for="(step, index) in steps"
         :key="step"
-        :class="index < current ? 'is-done' : index === current ? 'is-current' : 'is-todo'"
+        :class="`is-${stateOf(index)}`"
       >
         <!-- La marque : coche verte, cercle qui tourne ou cercle vide, dessinée en CSS (moins de code à charger). -->
-        <i class="loading-steps-mark" />{{ step }}
+        <i class="loading-steps-mark" /><span>{{ step }}<span
+          v-if="details?.[index] && stateOf(index) === 'current'"
+          class="loading-steps-detail"
+        >{{ details[index] }}</span></span>
       </li>
     </ol>
   </div>
@@ -92,6 +103,7 @@ const slow = computed(() => !props.done && tick.value >= props.steps.length * 1.
 .loading-steps-list .is-current::after { content: " : en cours"; }
 .loading-steps-list .is-current { font-weight: var(--weight-bold); }
 .loading-steps-list .is-todo { color: var(--text-secondary); }
+.loading-steps-detail { display: block; font-size: var(--font-small); line-height: var(--space-5); font-weight: var(--weight-regular); color: var(--text-secondary); }
 @media (prefers-reduced-motion: reduce) {
   .is-current .loading-steps-mark { animation: none; }
   .loading-steps-bar i { transition: none; }
