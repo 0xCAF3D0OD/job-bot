@@ -130,7 +130,7 @@ describe("CvPanel", () => {
     expect(file.find("[data-test=cv-versions-open]").text()).toContain("Versions · 1");
     expect(file.find("[data-test=cv-origin]").text()).toContain("Ne change pas, sert de base");
     const changes = wrapper.find("[data-test=cv-changes]");
-    expect(changes.text()).toContain("pour l’annonce d’Acme SA");
+    expect(changes.text()).toContain("Ajusté pour Acme SA. Rien n’est inventé.");
     const items = changes.findAll("[data-test=cv-change]");
     expect(items.map((li) => li.find("b").text())).toEqual(["Profil", "Expériences"]);
     expect(items[1]!.text()).toContain("Avant : « Stage web » venait en 2e position.");

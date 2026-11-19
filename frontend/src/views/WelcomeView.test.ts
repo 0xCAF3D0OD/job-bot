@@ -159,7 +159,7 @@ describe("les premiers pas (OnboardingC, 11b)", () => {
     expect(wrapper.find("[data-test=cv-upload]").text()).toContain("PDF ou Word, 10 Mo maximum");
     expect(wrapper.find("[data-test=welcome-continue]").text()).toBe("Continuer sans CV");
     const privacy = wrapper.find("[data-test=cv-privacy]");
-    expect(privacy.text()).toContain("L’IA n’en reçoit que les parties utiles, sans tes coordonnées.");
+    expect(privacy.text()).toContain("Ton CV reste privé. L’IA ne voit jamais tes coordonnées.");
     expect(privacy.find("a").attributes("href")).toBe("/tes-donnees#ia");
     // Sans Assistant, pas de « Pas de CV à jour ? » ; le « 1 » seul, lui, est là (maquette OnboardingC, §15).
     expect(wrapper.find("[data-test=cv-assistant]").exists()).toBe(false);

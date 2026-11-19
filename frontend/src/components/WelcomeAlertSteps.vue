@@ -171,7 +171,7 @@ const marks = computed<Mark[]>(() => {
 
         <template v-else-if="i === 2">
           <b class="wa-title">{{ got ? "Code reçu" : "Le code de confirmation s’affiche ici" }}</b>
-          <span class="wa-help">{{ got ? "Recopie-le sur jobup pour valider ton alerte." : "jobup l’envoie à ton adresse jobA1. Il s’affiche ici tout seul, pour que tu le recopies sur jobup." }}</span>
+          <span class="wa-help">{{ got ? "Recopie-le sur jobup pour valider ton alerte." : "Il s’affiche ici tout seul." }}</span>
           <div class="wa-code-row">
             <div
               :class="['wa-code', { got }]"

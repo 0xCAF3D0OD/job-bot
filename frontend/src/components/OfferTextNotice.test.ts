@@ -217,7 +217,7 @@ describe("OfferDetail, annonce complète lue automatiquement (prompt du 10 novem
     await flushPromises();
     expect(wrapper.find("dialog[data-test=give-sheet]").attributes("open")).toBeUndefined();
     expect(wrapper.find("dialog[data-test=paste-sheet]").attributes("open")).toBeDefined();
-    expect(wrapper.find("[data-test=paste-sheet]").text()).toContain("Tout le texte est accepté, même très long.");
+    expect(wrapper.find("[data-test=paste-sheet]").text()).toContain("Copie tout le texte de l’annonce et colle-le ici.");
   });
 
   it("refus dit par la lecture demandée d’ici : le bloc remplace la ligne de lecture", async () => {
@@ -331,7 +331,7 @@ describe("OfferDetail, annonce complète lue automatiquement (prompt du 10 novem
     await wrapper.find("[data-test=paste-offer-text]").trigger("click");
     const sheet = wrapper.find("[data-test=paste-sheet]");
     expect(sheet.text()).toContain("Coller le texte de l’annonce");
-    expect(sheet.text()).toContain("Sur la page de l’annonce, sélectionne tout le texte, copie-le et colle-le ici. Tout le texte est accepté, même très long.");
+    expect(sheet.text()).toContain("Copie tout le texte de l’annonce et colle-le ici.");
     const area = wrapper.find("[data-test=paste-text] [data-test=composer-input]");
     expect(area.attributes("rows")).toBe("5");
     expect(area.attributes("maxlength")).toBeUndefined();

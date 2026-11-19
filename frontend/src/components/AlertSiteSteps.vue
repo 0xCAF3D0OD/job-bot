@@ -32,7 +32,7 @@ const props = withDefaults(
     code: false,
     codeHelp: "",
     codeTrail: "ordinateur",
-    addressHelp: "Elle est déjà copiée quand tu ouvres le site : colle-la dans le champ e-mail de l’alerte.",
+    addressHelp: "Déjà copiée : colle-la dans le champ e-mail.",
     saveTitle: "",
   },
 );

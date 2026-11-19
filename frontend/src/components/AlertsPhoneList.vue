@@ -224,7 +224,7 @@ function remove(): void {
       </section>
       <template v-if="shown.kind === 'confirm' && shown.confirm">
         <p class="sheet-note">
-          {{ shown.site.name }} a envoyé un e-mail de confirmation. Tant que tu ne confirmes pas, aucune offre n’arrive.
+          Aucune offre n’arrive tant que tu ne confirmes pas.
         </p>
         <a
           class="sheet-cta"
@@ -318,7 +318,7 @@ function remove(): void {
     class="alerts-desk-note"
     data-test="alerts-note"
   >
-    jobA1 lit seulement les e-mails d’alerte transférés par ton filtre Gmail. Les autres sont supprimés à la réception.
+    jobA1 lit seulement les e-mails d’alerte reçus sur ton adresse jobA1.
   </p>
 </template>
 

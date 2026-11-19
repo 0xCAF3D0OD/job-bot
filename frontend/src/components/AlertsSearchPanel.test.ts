@@ -48,7 +48,7 @@ describe("Le volet « Ta recherche » (Kevin, 17.11)", () => {
     const rates = wrapper.findAll("[role=radio]");
     expect(rates.map((r) => r.text())).toEqual(["Tous", "Dès 50 %", "Dès 60 %", "Dès 70 %", "Dès 80 %", "Dès 90 %", "100 %"]);
     expect(rates[0]!.attributes("aria-checked")).toBe("true");
-    expect(wrapper.find(".alerts-search-info").text()).toBe("Ces critères servent aussi à trier tes offres.");
+    expect(wrapper.find(".alerts-search-info").text()).toBe("Les mêmes que dans ton Profil.");
   });
 
   it("une ville comprise dans un canton coché ne compte pas en plus", async () => {

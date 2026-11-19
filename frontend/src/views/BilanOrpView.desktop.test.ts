@@ -121,7 +121,7 @@ describe("Bilan › ORP sur ordinateur (maquette du 9 novembre)", () => {
     expect(searches.find("h2").text()).toBe("Recherches de novembre");
     expect(searches.find(".bilan-section-head span").text()).toBe("4 ce mois");
     expect(searches.find("[data-test=orp-proof-note]").text()).toBe(
-      "Déjà déclarées. L’ORP peut demander un justificatif pour chaque recherche : l’e-mail de confirmation ou une capture de la candidature.",
+      "Déjà déclarées. Garde un justificatif pour chacune.",
     );
     const states = searches.findAll(".bilan-card-state").map((s) => s.text());
     expect(states).toEqual(["Justificatif à joindre", "Justificatif joint"]);
