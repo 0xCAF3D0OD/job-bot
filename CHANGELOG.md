@@ -799,3 +799,6 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.585 | Page Assistant du téléphone : l'écran de lancement ne la cache plus (elle restait sur le logo jobA1 depuis le §53) | livrée |
 | 1.6.586 | Fiche d'une offre sur ordinateur : 16 px sous la pastille « Environ 10 secondes · compte dans ta formule », comme sur la planche OffreNonNotee (elle touchait presque le bord de la carte) | livrée |
 | 1.6.587 | Fiche d'une offre sur téléphone : un seul lien dans « Le poste », « Voir l'annonce complète » qui déplie le texte (et « Masquer l'annonce »), et « Ouvrir l'annonce sur le site » dans le menu ⋯ (décision de Kevin du 19.11, option B) | livrée |
+| 1.6.588 | Retour d'entretien sur ordinateur : plus de barre de défilement horizontale dans la fenêtre (infobulles des boutons ronds alignées sur leur bord droit) | livrée |
+| 1.6.589 | Trier sur ordinateur : la citation au dos d'une carte s'arrête sur une ligne entière avec « … », plus de ligne tranchée ni de surlignage hors du bloc | livrée |
+| 1.6.590 | Faire le point sur téléphone : le ressenti et les notes posés sur le fond, sans carte (§72n) | livrée |
