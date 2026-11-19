@@ -808,3 +808,4 @@ sur main, `scripts/changelog.py` lui donne le numéro suivant à la fusion et as
 | 1.6.594 | Téléphone, écriture de la lettre conforme à ChargementLettre : sans carte ni en-tête, logo, étapes vraies (« CV adapté » coché seulement CV prêt) | livrée |
 | 1.6.595 | La CI installe le navigateur puis ses dépendances avec plusieurs essais, et continue si le miroir apt de GitHub ne répond pas | livrée |
 | 1.6.596 | Faire le point sur ordinateur : le panneau de droite de Rendez-vous (À noter, puis Passés), aussi pour « Voir le retour » (§72m) ; « À noter » compte les mêmes entretiens que le badge de l'onglet | livrée |
+| 1.6.597 | Fiche d'une offre sur téléphone : le menu ⋯ dans l'ordre et avec les icônes de la planche ActionsOffre (assistant, agence avec l'immeuble, expirée, note, ouvrir l'annonce, partager ; « Remettre dans Nouvelles » avec la flèche retour) | livrée |
