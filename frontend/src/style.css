@@ -2179,11 +2179,14 @@ a[download][data-file="failed"]::after { content: "· Réessayer"; margin-left: 
 .victory-bubble { display: none; } }
 /* Trier une offre (docs/60 §3) : sa carte s'efface vers la droite, les suivantes remontent. */
 .offer-cards { position: relative; }
-.card-leave-active { position: absolute; left: 0; right: 0; transition: opacity var(--t-state), transform var(--t-state) var(--ease-out); }
-.card-leave-to { opacity: 0; transform: translateX(40px); }
+/* Une offre écartée sort avec la sortie du mouvement des éléments (180 ms, K5 amendée le 19.11) ; les suivantes
+   remontent sur la même durée. Valeur de repli tant que les variables --motion-* ne sont pas sur main. */
+.card-leave-active { position: absolute; left: 0; right: 0; transition: opacity var(--motion-exit, 180ms cubic-bezier(0.3, 0, 0.8, 0.15)), transform var(--motion-exit, 180ms cubic-bezier(0.3, 0, 0.8, 0.15)); }
+.card-leave-to { opacity: 0; transform: translateY(var(--motion-sink, 4px)); }
+.offer-cards > .card-move { transition: transform var(--motion-exit, 180ms cubic-bezier(0.3, 0, 0.8, 0.15)); }
 .card-enter-active { transition: opacity var(--t-enter), transform var(--t-enter) var(--ease-out); }
 .card-enter-from { opacity: 0; transform: translateY(8px); }
-@media (prefers-reduced-motion: reduce) { .card-move, .card-leave-active, .card-enter-active { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .card-move, .offer-cards > .card-move, .card-leave-active, .card-enter-active { transition: none; } }
 
 /* Réussite (docs/61 §1) : une carte qui vient devant, souple ; l'image posée sur son bord. */
 .success-overlay { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: var(--space-4); background: color-mix(in srgb, var(--bg) 55%, transparent); animation: overlay-in var(--t-state) ease-out; }

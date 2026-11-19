@@ -225,6 +225,15 @@ function withMoved(listed: Offer[]): Offer[] {
   }
   return out;
 }
+// Sortir une offre de la liste, et l'y remettre à sa place exacte (« Écarter » puis « Annuler », K5 amendée le 19.11).
+function withoutOffer(id: number): Offer[] {
+  return items.value.filter((o) => o.id !== id);
+}
+function withOffer(offer: Offer, index: number): Offer[] {
+  const out = withoutOffer(offer.id);
+  out.splice(Math.min(index, out.length), 0, offer);
+  return out;
+}
 // « Nouvelle note : 38. Elle sort de ton filtre « 50 et + ». », sous la note de la fiche.
 const outsideNote = computed(() => {
   const offer = selected.value;
@@ -571,7 +580,14 @@ async function setStatus(status: "to_review" | "later" | "ignored" | "preparing"
   notice.value = "";
   const previous = offer.status;
   const index = items.value.findIndex((o) => o.id === offer.id);
-  if (index >= 0 && status !== "preparing") {
+  // K5 amendée le 19.11 (Kevin) : « Écarter » fait exception. L'offre sort tout de suite de la liste (Nouvelles,
+  // Gardées, En préparation, Toutes), les cartes du dessous remontent ; « Annuler » la remet à sa place exacte.
+  // Seule la vue « all », qui liste aussi les écartées, la garde à sa place avec sa pastille.
+  const leaves = status === "ignored" && filters.value.view !== "all";
+  if (index >= 0 && leaves) {
+    moved.delete(offer.id);
+    items.value = withoutOffer(offer.id);
+  } else if (index >= 0 && status !== "preparing") {
     const changed = { ...offer, status };
     moved.set(offer.id, { offer: changed, index });
     items.value = items.value.map((o) => (o.id === offer.id ? changed : o));
@@ -589,6 +605,8 @@ async function setStatus(status: "to_review" | "later" | "ignored" | "preparing"
       see: status === "later" || status === "to_review" ? () => update(viewPatch(status, filters.value.sort), true) : undefined,
       restore: async () => {
         moved.delete(offer.id);
+        // Une offre sortie de la liste y revient tout de suite, à son index d'avant (K5 amendée le 19.11).
+        if (leaves && index >= 0) items.value = withOffer({ ...offer, status: previous }, index);
         await api.PATCH("/api/offers/{offer_id}/status", { params: { path: { offer_id: offer.id } }, body: { status: previous } });
         await load();
         // Sur ordinateur, l'offre revient à sa place, choisie, son détail ouvert (§36, décision de Kevin du 16.11).
